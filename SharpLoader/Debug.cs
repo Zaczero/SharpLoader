@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -10,9 +9,10 @@ namespace SharpLoader
     {
         public static void WriteLine(object obj)
         {
-#if DEBUG
-            Console.WriteLine($"[DEBUG] : {obj}");
-#endif
+            <swap>
+            <trash>
+            Console.WriteLine("[DEBUG] : " + obj);
+            <swap/>
         }
     }
 }

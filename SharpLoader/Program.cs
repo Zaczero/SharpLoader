@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
@@ -9,18 +8,28 @@ using SharpLoader.Core;
 
 namespace SharpLoader
 {
-    class Program
+    public class Program
     {
-        static void Main(string[] args)
+        // doesn't support $ strings
+        // doesn't support vs code (#if etc.)
+
+        public static void Main(string[] args)
         {
-            var randomizer = new SourceRandomizer(seed: 123);
+            var extractor = new ResourceExtractor("SharpLoader");
+            var randomizer = new SourceRandomizer(Environment.TickCount);
             var compiler = new RuntimeCompiler();
 
-            var someSauce = "using System;public class Class1{public static void Method1(){Console.WriteLine(\"Hello ;)\");[trash:15]}}";
-            randomizer.Randomize(ref someSauce);
+            var sauce = extractor.Extract("Debug.cs");
+            randomizer.Randomize(ref sauce);
 
             Assembly compiled;
-            var result = compiler.Compile(out compiled, new [] {"System.dll"}, someSauce);
+            var result = compiler.Compile(out compiled, new [] {"System.dll"}, sauce);
+
+            var mod = compiled.GetModules()[0];
+            var type = mod.GetType("SharpLoader.Debug");
+            var method = type.GetMethod("WriteLine");
+            method.Invoke(null, new object[] {"Welcome Random!"});
+
             Debugger.Break();
         }
     }

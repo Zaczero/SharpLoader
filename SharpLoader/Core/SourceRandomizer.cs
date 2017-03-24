@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace SharpLoader.Core
 {
-    class SourceRandomizer
+    public class SourceRandomizer
     {
         private readonly Random _rnd;
 
@@ -17,8 +17,10 @@ namespace SharpLoader.Core
 
         public void Randomize(ref string source)
         {
-            source = Format(source);
+            source = Encode(source);
             source = Trash(source);
+            source = Swap(source);
+            source = Decode(source);
         }
 
         public string GetRandomString(int length)
@@ -51,7 +53,7 @@ namespace SharpLoader.Core
             return varName;
         }
 
-        private string Format(string str)
+        private string Encode(string str)
         {
             var result = new StringBuilder(str.Length);
             var insideComment = 0;
@@ -81,13 +83,13 @@ namespace SharpLoader.Core
                 }
 
                 // Check comments (outside)
-                if (str[i] == '/' && str[i + 1] == '/')
+                if (!insideString && str[i] == '/' && str[i + 1] == '/')
                 {
                     i++;
                     insideComment = 1;
                     continue;
                 }
-                if (str[i] == '/' && str[i + 1] == '*')
+                if (!insideString && str[i] == '/' && str[i + 1] == '*')
                 {
                     i++;
                     insideComment = 2;
@@ -95,24 +97,48 @@ namespace SharpLoader.Core
                 }
 
                 // Check insideString
-                if (str[i] == '\\' && str[i + 1] != '\"')
+                if (str[i] == '\"' && str[i - 1] != '\\')
                 {
                     insideString = !insideString;
                 }
-                else if (str[i] == '\\' && str[i + 1] != '\'')
+                else if (str[i] == '\'' && str[i - 1] != '\\')
                 {
                     insideString = !insideString;
                 }
 
-                // Don't format strings
+                // Skip strings
                 if (!insideString)
                 {
-                    // Format
+                    // Encode
                     if (str[i] == '\r' ||
-                        str[i] == '\n' ||
-                       (str[i] == ' ' && str[i + 1] == ' '))
+                        str[i] == '\n')
                     {
                         continue;
+                    }
+
+                    if (str[i] == ' ')
+                    {
+                        if (!char.IsLetterOrDigit(str[i - 1]) ||
+                            !char.IsLetterOrDigit(str[i + 1]))
+                        {
+                            continue;
+                        }
+                    }
+                }
+                // Encode strings
+                else
+                {
+                    if (str[i] == ';')
+                    {
+                        str = str.Remove(i, 1).Insert(i, "\u0000");
+                    }
+                    else if (str[i] == '<')
+                    {
+                        str = str.Remove(i, 1).Insert(i, "\u0001");
+                    }
+                    else if (str[i] == '>')
+                    {
+                        str = str.Remove(i, 1).Insert(i, "\u0002");
                     }
                 }
 
@@ -129,7 +155,7 @@ namespace SharpLoader.Core
             while (true)
             {
                 // Check for tag
-                var tagIndex = result.IndexOf("[trash", StringComparison.Ordinal);
+                var tagIndex = result.IndexOf("<trash", StringComparison.Ordinal);
                 if (tagIndex == -1)
                 {
                     break;
@@ -137,7 +163,7 @@ namespace SharpLoader.Core
 
                 // Get arguments
                 var arg = 8;
-                var tagLength = result.Substring(tagIndex).IndexOf("]", StringComparison.Ordinal);
+                var tagLength = result.Substring(tagIndex).IndexOf(">", StringComparison.Ordinal);
                 if (tagLength == -1)
                 {
                     throw new Exception();
@@ -151,26 +177,73 @@ namespace SharpLoader.Core
                 var trash = string.Empty;
                 for (var i = 0; i < arg; i++)
                 {
-                    switch (_rnd.Next(0, 3))
+                    // 25%
+                    switch (_rnd.Next(0, 4))
                     {
                         case 0:
                         {
-                            var varName = GetVariableName(result);
-                            var change = _rnd.Next(1, byte.MaxValue);
-                            trash += $"byte {varName} = {_rnd.Next(byte.MinValue, byte.MaxValue - change)};{varName} += {change};";
+                            // string value
+                            var varValue = GetRandomString(_rnd.Next(8, 32));
+                            var operation = string.Empty;
+
+                            switch (_rnd.Next(0, 3))
+                            {
+                                case 0:
+                                {
+                                    operation = "Normalize()";
+                                    break;
+                                }
+                                case 1:
+                                {
+                                    operation = "ToLower()";
+                                    break;
+                                }
+                                case 2:
+                                {
+                                    operation = "ToUpper()";
+                                    break;
+                                }
+                            }
+ 
+                            trash += $"\"{varValue}\".{operation};";
                             break;
                         }
-                        case 1:
+                        default:
                         {
+                            // numeric value
                             var varName = GetVariableName(result);
-                            var change = _rnd.Next(1, int.MaxValue);
-                            trash += $"int {varName} = {_rnd.Next(int.MinValue, int.MaxValue - change)};{varName} += {change};";
-                            break;
-                        }
-                        case 2:
-                        {
-                            var varName = GetVariableName(result);
-                            trash += $"string {varName} = \"{GetRandomString(_rnd.Next(8, 32))}\";{varName}.Normalize();";
+                            var operation = _rnd.Next(0, 2) == 0 ? '+' : '-';
+
+                            var varType = string.Empty;
+                            var varValue = 0;
+                            var varChange = 0;
+
+                            switch (_rnd.Next(0, 3))
+                            {
+                                case 0:
+                                {
+                                    varType = "byte";
+                                    varChange = _rnd.Next(1, byte.MaxValue);
+                                    varValue = operation == '+' ? _rnd.Next(byte.MinValue, byte.MaxValue - varChange) : _rnd.Next(byte.MinValue + varChange, byte.MaxValue);
+                                    break;
+                                }
+                                case 1:
+                                {
+                                    varType = "short";
+                                    varChange = _rnd.Next(1, short.MaxValue);
+                                    varValue = operation == '+' ? _rnd.Next(short.MinValue, short.MaxValue - varChange) : _rnd.Next(short.MinValue + varChange, short.MaxValue);
+                                    break;
+                                }
+                                case 2:
+                                {
+                                    varType = "int";
+                                    varChange = _rnd.Next(1, int.MaxValue);
+                                    varValue = operation == '+' ? _rnd.Next(int.MinValue, int.MaxValue - varChange) : _rnd.Next(int.MinValue + varChange, int.MaxValue);
+                                    break;
+                                }
+                            }
+
+                            trash += $"{varType} {varName} = {varValue}\u0000{varName} {operation}= {varChange};";
                             break;
                         }
                     }
@@ -181,6 +254,158 @@ namespace SharpLoader.Core
             }
 
             return result;
+        }
+
+        private string Swap(string str)
+        {
+            var result = str;
+
+            while (true)
+            {
+                // Check for tag
+                var tagIndex = result.IndexOf("<swap>", StringComparison.Ordinal);
+                if (tagIndex == -1)
+                {
+                    break;
+                }
+
+                var tagLength = 6;
+                var endTagLength = 7;
+
+                var afterStr = str.Substring(tagIndex + tagLength);
+                var endTagIndex = afterStr.IndexOf("<swap/>", StringComparison.Ordinal);
+                if (endTagIndex == -1)
+                {
+                    throw new Exception("<swap/> not found");
+                }
+                var innerStr = afterStr.Substring(0, endTagIndex);
+
+                if (innerStr.IndexOf("<block>", StringComparison.Ordinal) != -1)
+                {
+                    var blocks = new List<string>();
+
+                    // Find blocks
+                    while (true)
+                    {
+                        var blockIndex = innerStr.IndexOf("<block>", StringComparison.Ordinal);
+                        if (blockIndex == -1)
+                        {
+                            // Add last block
+                            blocks.Add(innerStr);
+                            break;
+                        }
+
+                        var blockTagLength = 7;
+
+                        // Get block
+                        var innerBlockStr = innerStr.Substring(0, blockIndex);
+                        blocks.Add(innerBlockStr);
+
+                        // Remove from search
+                        innerStr = innerStr.Remove(0, blockIndex + blockTagLength);
+                    }
+
+                    var swapped = new string[blocks.Count];
+
+                    // Swap
+                    foreach (var block in blocks)
+                    {
+                        // Find index to swap into
+                        int swapIndex;
+                        while (true)
+                        {
+                            swapIndex = _rnd.Next(0, swapped.Length);
+                            if (swapped[swapIndex] == null)
+                            {
+                                break;
+                            }
+                        }
+
+                        swapped[swapIndex] = block;
+                    }
+
+                    // Remove old
+                    result = result.Remove(tagIndex, tagLength + endTagIndex + endTagLength);
+
+                    // Insert new
+                    var output = swapped.Aggregate(string.Empty, (current, s) => current + s);
+                    result = result.Insert(tagIndex, output);
+                }
+                else
+                {
+                    // Split
+                    var blocks = innerStr.Split(new [] {';'}, StringSplitOptions.RemoveEmptyEntries);
+                    var swapped = new string[blocks.Length];
+
+                    // Swap
+                    foreach (var block in blocks)
+                    {
+                        // Find index to swap into
+                        int swapIndex;
+                        while (true)
+                        {
+                            swapIndex = _rnd.Next(0, swapped.Length);
+                            if (swapped[swapIndex] == null)
+                            {
+                                break;
+                            }
+                        }
+
+                        swapped[swapIndex] = block;
+                    }
+
+                    // Remove old
+                    result = result.Remove(tagIndex, tagLength + endTagIndex + endTagLength);
+
+                    // Insert new
+                    var output = swapped.Aggregate(string.Empty, (current, s) => current + (s + ';'));
+                    result = result.Insert(tagIndex, output);
+                }
+            }
+
+            return result;
+        }
+
+        private string Decode(string str)
+        {
+            var insideString = false;
+
+            for (var i = 0; i < str.Length; i++)
+            {
+                // Check insideString
+                if (str[i] == '\"' && str[i - 1] != '\\')
+                {
+                    insideString = !insideString;
+                }
+                else if (str[i] == '\'' && str[i - 1] != '\\')
+                {
+                    insideString = !insideString;
+                }
+
+                if (str[i] == '\u0000')
+                {
+                    str = str.Remove(i, 1).Insert(i, ";");
+                }
+                else
+                {
+                    // Skip not-strings
+                    if (!insideString)
+                    {
+                        continue;
+                    }
+
+                    if (str[i] == '\u0001')
+                    {
+                        str = str.Remove(i, 1).Insert(i, "<");
+                    }
+                    else if (str[i] == '\u0002')
+                    {
+                        str = str.Remove(i, 1).Insert(i, ">");
+                    }
+                }
+            }
+
+            return str;
         }
     }
 }
