@@ -33,14 +33,18 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
+    <Reference Include="System.Windows.Forms" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Core\ResourceExtractor.cs" />
     <Compile Include="Core\RuntimeCompiler.cs" />
     <Compile Include="Core\SourceRandomizer.cs" />
-    <EmbeddedResource Include="Debug.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <EmbeddedResource Include="Yami\NetVars.cs" />
+    <EmbeddedResource Include="Yami\Memory.cs" />
+    <EmbeddedResource Include="Yami\EntryPoint.cs" />
+    <EmbeddedResource Include="Yami\WinApi.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

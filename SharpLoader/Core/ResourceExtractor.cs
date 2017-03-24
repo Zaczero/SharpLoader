@@ -13,6 +13,11 @@ namespace SharpLoader.Core
         private readonly Assembly _assembly = Assembly.GetExecutingAssembly();
         private readonly string _namespace;
 
+        public ResourceExtractor()
+        {
+            _namespace = string.Empty;
+        }
+
         public ResourceExtractor(string namespaceName)
         {
             _namespace = namespaceName;

@@ -162,7 +162,7 @@ namespace SharpLoader.Core
                 }
 
                 // Get arguments
-                var arg = 8;
+                var arg = _rnd.Next(3,8);
                 var tagLength = result.Substring(tagIndex).IndexOf(">", StringComparison.Ordinal);
                 if (tagLength == -1)
                 {
@@ -243,7 +243,7 @@ namespace SharpLoader.Core
                                 }
                             }
 
-                            trash += $"{varType} {varName} = {varValue}\u0000{varName} {operation}= {varChange};";
+                            trash += $"{varType} {varName}={varValue}\u0000{varName}{operation}={varChange};";
                             break;
                         }
                     }
@@ -272,7 +272,7 @@ namespace SharpLoader.Core
                 var tagLength = 6;
                 var endTagLength = 7;
 
-                var afterStr = str.Substring(tagIndex + tagLength);
+                var afterStr = result.Substring(tagIndex + tagLength);
                 var endTagIndex = afterStr.IndexOf("<swap/>", StringComparison.Ordinal);
                 if (endTagIndex == -1)
                 {
