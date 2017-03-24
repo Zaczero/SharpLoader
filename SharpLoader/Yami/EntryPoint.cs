@@ -131,6 +131,8 @@ namespace SharpLoader.Yami
 
                 Thread.Sleep(100);
             }
+
+            Environment.Exit(0);
         }
 
         public static bool IsKeyPressed(Keys key)
