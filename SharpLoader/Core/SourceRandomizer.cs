@@ -162,7 +162,7 @@ namespace SharpLoader.Core
                 }
 
                 // Get arguments
-                var arg = _rnd.Next(3,8);
+                int arg;
                 var tagLength = result.Substring(tagIndex).IndexOf(">", StringComparison.Ordinal);
                 if (tagLength == -1)
                 {
@@ -171,6 +171,10 @@ namespace SharpLoader.Core
                 if (tagLength > 7)
                 {
                     arg = int.Parse(result.Substring(tagIndex + 7, tagLength - 7));
+                }
+                else
+                {
+                    arg = _rnd.Next(3, 8);
                 }
 
                 // Add trash
