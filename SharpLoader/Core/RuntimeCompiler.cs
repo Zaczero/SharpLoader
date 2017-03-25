@@ -33,9 +33,13 @@ namespace SharpLoader.Core
             var result = _compiler.CompileAssemblyFromSource(parameters, sources);
             if (result.Errors.HasErrors)
             {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine($"-=: Compilation error");
+
+                Console.ReadKey();
+
                 Debugger.Break();
-                compiledAssembly = null;
-                return false;
+                Environment.Exit(4);
             }
 
             compiledAssembly = result.CompiledAssembly;

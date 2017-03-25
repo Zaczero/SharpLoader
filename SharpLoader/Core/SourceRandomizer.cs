@@ -17,30 +17,31 @@ namespace SharpLoader.Core
 
         public void Randomize(ref string source)
         {
-            source = Encode(source);
-            source = Trash(source);
-            source = Swap(source);
-            source = Decode(source);
+            Encode(ref source);
+            Trash(ref source);
+            Swap(ref source);
+            Decode(ref source);
         }
 
         public string GetRandomString(int length)
         {
             const string source = "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM";
 
-            var result = new StringBuilder(length);
+            var rndStrSb = new StringBuilder(length);
 
             for (var i = 0; i < length; i++)
             {
                 var index = _rnd.Next(0, source.Length);
-                result.Append(source[index]);
+                rndStrSb.Append(source[index]);
             }
 
-            return result.ToString();
+            return rndStrSb.ToString();
         }
 
         private string GetVariableName(string str)
         {
             string varName;
+
             while (true)
             {
                 varName = GetRandomString(_rnd.Next(8, 16));
@@ -53,9 +54,10 @@ namespace SharpLoader.Core
             return varName;
         }
 
-        private string Encode(string str)
+        private void Encode(ref string str)
         {
-            var result = new StringBuilder(str.Length);
+            var resultSb = new StringBuilder(str.Length);
+
             var insideComment = 0;
             var insideString = false;
 
@@ -83,6 +85,12 @@ namespace SharpLoader.Core
                 }
 
                 // Check comments (outside)
+                if (!insideString && str[i] == '/' && str[i + 1] == '/' && str[i + 2] == '-')
+                {
+                    i++;
+                    i++;
+                    continue;
+                }
                 if (!insideString && str[i] == '/' && str[i + 1] == '/')
                 {
                     i++;
@@ -130,32 +138,33 @@ namespace SharpLoader.Core
                 {
                     if (str[i] == ';')
                     {
-                        str = str.Remove(i, 1).Insert(i, "\u0000");
+                        resultSb.Append('\u0000');
+                        continue;
                     }
-                    else if (str[i] == '<')
+                    if (str[i] == '<')
                     {
-                        str = str.Remove(i, 1).Insert(i, "\u0001");
+                        resultSb.Append('\u0001');
+                        continue;
                     }
-                    else if (str[i] == '>')
+                    if (str[i] == '>')
                     {
-                        str = str.Remove(i, 1).Insert(i, "\u0002");
+                        resultSb.Append('\u0002');
+                        continue;
                     }
                 }
 
-                result.Append(str[i]);
+                resultSb.Append(str[i]);
             }
 
-            return result.ToString();
+            str = resultSb.ToString();
         }
 
-        private string Trash(string str)
+        private void Trash(ref string str)
         {
-            var result = str;
-
             while (true)
             {
                 // Check for tag
-                var tagIndex = result.IndexOf("<trash", StringComparison.Ordinal);
+                var tagIndex = str.IndexOf("<trash", StringComparison.Ordinal);
                 if (tagIndex == -1)
                 {
                     break;
@@ -163,14 +172,14 @@ namespace SharpLoader.Core
 
                 // Get arguments
                 int arg;
-                var tagLength = result.Substring(tagIndex).IndexOf(">", StringComparison.Ordinal);
+                var tagLength = str.Substring(tagIndex).IndexOf(">", StringComparison.Ordinal);
                 if (tagLength == -1)
                 {
                     throw new Exception();
                 }
                 if (tagLength > 7)
                 {
-                    arg = int.Parse(result.Substring(tagIndex + 7, tagLength - 7));
+                    arg = int.Parse(str.Substring(tagIndex + 7, tagLength - 7));
                 }
                 else
                 {
@@ -215,7 +224,7 @@ namespace SharpLoader.Core
                         default:
                         {
                             // numeric value
-                            var varName = GetVariableName(result);
+                            var varName = GetVariableName(str);
                             var operation = _rnd.Next(0, 2) == 0 ? '+' : '-';
 
                             var varType = string.Empty;
@@ -254,20 +263,16 @@ namespace SharpLoader.Core
                 }
 
                 // Replace
-                result = result.Remove(tagIndex, tagLength + 1).Insert(tagIndex, trash);
+                str = str.Remove(tagIndex, tagLength + 1).Insert(tagIndex, trash);
             }
-
-            return result;
         }
 
-        private string Swap(string str)
+        private void Swap(ref string str)
         {
-            var result = str;
-
             while (true)
             {
                 // Check for tag
-                var tagIndex = result.IndexOf("<swap>", StringComparison.Ordinal);
+                var tagIndex = str.IndexOf("<swap>", StringComparison.Ordinal);
                 if (tagIndex == -1)
                 {
                     break;
@@ -276,7 +281,7 @@ namespace SharpLoader.Core
                 var tagLength = 6;
                 var endTagLength = 7;
 
-                var afterStr = result.Substring(tagIndex + tagLength);
+                var afterStr = str.Substring(tagIndex + tagLength);
                 var endTagIndex = afterStr.IndexOf("<swap/>", StringComparison.Ordinal);
                 if (endTagIndex == -1)
                 {
@@ -329,11 +334,11 @@ namespace SharpLoader.Core
                     }
 
                     // Remove old
-                    result = result.Remove(tagIndex, tagLength + endTagIndex + endTagLength);
+                    str = str.Remove(tagIndex, tagLength + endTagIndex + endTagLength);
 
                     // Insert new
                     var output = swapped.Aggregate(string.Empty, (current, s) => current + s);
-                    result = result.Insert(tagIndex, output);
+                    str = str.Insert(tagIndex, output);
                 }
                 else
                 {
@@ -359,18 +364,16 @@ namespace SharpLoader.Core
                     }
 
                     // Remove old
-                    result = result.Remove(tagIndex, tagLength + endTagIndex + endTagLength);
+                    str = str.Remove(tagIndex, tagLength + endTagIndex + endTagLength);
 
                     // Insert new
                     var output = swapped.Aggregate(string.Empty, (current, s) => current + (s + ';'));
-                    result = result.Insert(tagIndex, output);
+                    str = str.Insert(tagIndex, output);
                 }
             }
-
-            return result;
         }
 
-        private string Decode(string str)
+        private void Decode(ref string str)
         {
             var insideString = false;
 
@@ -408,8 +411,6 @@ namespace SharpLoader.Core
                     }
                 }
             }
-
-            return str;
         }
     }
 }
