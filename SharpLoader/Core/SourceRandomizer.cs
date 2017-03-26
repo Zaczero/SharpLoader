@@ -126,8 +126,8 @@ namespace SharpLoader.Core
 
                     if (str[i] == ' ')
                     {
-                        if (!char.IsLetterOrDigit(str[i - 1]) ||
-                            !char.IsLetterOrDigit(str[i + 1]))
+                        if ((!char.IsLetterOrDigit(str[i - 1]) && str[i - 1] != '_') ||
+                            (!char.IsLetterOrDigit(str[i + 1]) && str[i + 1] != '_'))
                         {
                             continue;
                         }
