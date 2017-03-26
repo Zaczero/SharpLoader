@@ -1,11 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Text;
-using System.Threading.Tasks;
 using SharpLoader.Core;
 
 namespace SharpLoader
@@ -30,7 +27,6 @@ namespace SharpLoader
          */
 
         //todo zip
-        //todo remove unused references
 
         private const string Author = "Zaczero";
         private const string Version = "1.0";
