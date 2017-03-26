@@ -89,7 +89,6 @@ namespace SharpLoader
 
                 Console.ReadKey();
 
-                Debugger.Break();
                 Environment.Exit(1);
             }
 
@@ -119,7 +118,6 @@ namespace SharpLoader
 
                 Console.ReadKey();
 
-                Debugger.Break();
                 Environment.Exit(2);
             }
 
@@ -130,7 +128,6 @@ namespace SharpLoader
 
                 Console.ReadKey();
 
-                Debugger.Break();
                 Environment.Exit(2);
             }
 
@@ -141,7 +138,6 @@ namespace SharpLoader
 
                 Console.ReadKey();
 
-                Debugger.Break();
                 Environment.Exit(2);
             }
 
@@ -156,7 +152,6 @@ namespace SharpLoader
 
                     Console.ReadKey();
 
-                    Debugger.Break();
                     Environment.Exit(5);
                 }
 

@@ -38,10 +38,8 @@ namespace SharpLoader.Core
                 Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine($"-=: Compilation error");
 
-                Debugger.Break();
                 Console.ReadKey();
 
-                Debugger.Break();
                 Environment.Exit(4);
             }
 
