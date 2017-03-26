@@ -126,8 +126,8 @@ namespace SharpLoader.Core
 
                     if (str[i] == ' ')
                     {
-                        if ((!char.IsLetterOrDigit(str[i - 1]) && str[i - 1] != '_') ||
-                            (!char.IsLetterOrDigit(str[i + 1]) && str[i + 1] != '_'))
+                        if ((!char.IsLetterOrDigit(str[i - 1]) && str[i - 1] != '_' && str[i - 1] != '@') ||
+                            (!char.IsLetterOrDigit(str[i + 1]) && str[i + 1] != '_' && str[i + 1] != '@'))
                         {
                             continue;
                         }
@@ -183,7 +183,7 @@ namespace SharpLoader.Core
                 }
                 else
                 {
-                    arg = _rnd.Next(3, 8);
+                    arg = _rnd.Next(3, 9);
                 }
 
                 // Add trash
