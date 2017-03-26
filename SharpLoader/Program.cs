@@ -64,8 +64,6 @@ namespace SharpLoader
             var randomizer = new SourceRandomizer(seed);
             var compiler = new RuntimeCompiler();
 
-            var oldForegroundColor = Console.ForegroundColor;
-
             Console.ForegroundColor = ConsoleColor.Magenta;
             Console.WriteLine($"-=: SharpLoader v{Version} initialized");
             Console.ForegroundColor = ConsoleColor.Cyan;
