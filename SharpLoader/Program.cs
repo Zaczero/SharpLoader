@@ -83,11 +83,8 @@ namespace SharpLoader
 
                 WinApi.WritePrivateProfileString("SharpLoader", "Assemblies", "", DataPath);
                 WinApi.WritePrivateProfileString("SharpLoader", "Sources", "", DataPath);
-
-                WinApi.WritePrivateProfileString("EntryPoint", "Namespace", "", DataPath);
-                WinApi.WritePrivateProfileString("EntryPoint", "Class", "", DataPath);
-                WinApi.WritePrivateProfileString("EntryPoint", "Method", "", DataPath);
-                WinApi.WritePrivateProfileString("EntryPoint", "Arguments", "", DataPath);
+                WinApi.WritePrivateProfileString("SharpLoader", "Output", "SharpLoader", DataPath);
+                WinApi.WritePrivateProfileString("SharpLoader", "Arguments", "", DataPath);
 
                 Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine($"-=: Default data file generated");
@@ -103,29 +100,18 @@ namespace SharpLoader
 
             var assembliesReadSb  = new StringBuilder(ReadBufferSize);
             var sourceFilesReadSb = new StringBuilder(ReadBufferSize);
-            var namespaceReadSb   = new StringBuilder(ReadBufferSize);
-            var classReadSb       = new StringBuilder(ReadBufferSize);
-            var methodReadSb      = new StringBuilder(ReadBufferSize);
-            var argumentsReadSb   = new StringBuilder(ReadBufferSize);
+            var outputNameReadSb = new StringBuilder(ReadBufferSize);
+            var compilerArgumentsReadSb = new StringBuilder(ReadBufferSize);
 
             WinApi.GetPrivateProfileString("SharpLoader", "Assemblies", string.Empty, assembliesReadSb, ReadBufferSize, DataPath);
             WinApi.GetPrivateProfileString("SharpLoader", "Sources", string.Empty, sourceFilesReadSb, ReadBufferSize, DataPath);
-            WinApi.GetPrivateProfileString("EntryPoint", "Namespace", string.Empty, namespaceReadSb, ReadBufferSize, DataPath);
-            WinApi.GetPrivateProfileString("EntryPoint", "Class", string.Empty, classReadSb, ReadBufferSize, DataPath);
-            WinApi.GetPrivateProfileString("EntryPoint", "Method", string.Empty, methodReadSb, ReadBufferSize, DataPath);
-            WinApi.GetPrivateProfileString("EntryPoint", "Arguments", string.Empty, argumentsReadSb, ReadBufferSize, DataPath);
+            WinApi.GetPrivateProfileString("SharpLoader", "Output", string.Empty, outputNameReadSb, ReadBufferSize, DataPath);
+            WinApi.GetPrivateProfileString("SharpLoader", "Arguments", string.Empty, compilerArgumentsReadSb, ReadBufferSize, DataPath);
 
             var assemblies        = assembliesReadSb.ToString().Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
             var sourceFiles       = sourceFilesReadSb.ToString().Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
-            var @namespace        = namespaceReadSb.ToString();
-            var @class            = classReadSb.ToString();
-            var method            = methodReadSb.ToString();
-            var arguments         = argumentsReadSb.ToString().Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
-
-            if (arguments.Length == 0)
-            {
-                arguments = null;
-            }
+            var outputName        = $"{outputNameReadSb}-{DateTime.Now.ToString("dd-MM-yyyy")}.exe";
+            var compilerArguments = compilerArgumentsReadSb.ToString();
 
             // Check values
             if (assemblies.Length == 0)
@@ -150,32 +136,10 @@ namespace SharpLoader
                 Environment.Exit(2);
             }
 
-            if (string.IsNullOrWhiteSpace(@namespace))
+            if (string.IsNullOrWhiteSpace(outputName))
             {
                 Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine($"-=: Namespace is not given");
-
-                Console.ReadKey();
-
-                Debugger.Break();
-                Environment.Exit(2);
-            }
-
-            if (string.IsNullOrWhiteSpace(@class))
-            {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine($"-=: Class is not given");
-
-                Console.ReadKey();
-
-                Debugger.Break();
-                Environment.Exit(2);
-            }
-
-            if (string.IsNullOrWhiteSpace(method))
-            {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine($"-=: Method is not given");
+                Console.WriteLine($"-=: Output name is not given");
 
                 Console.ReadKey();
 
@@ -212,65 +176,12 @@ namespace SharpLoader
             Console.ForegroundColor = ConsoleColor.White;
             Console.WriteLine("-=: Compiling...");
 
-            Assembly compiled;
-            compiler.Compile(out compiled, assemblies, sources);
+            compiler.Compile(outputName, compilerArguments, assemblies, sources);
 
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.WriteLine("-=: Starting...");
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.Write($"-=: DONE [{outputName}] (press any key to exit)");
+            Console.ReadKey();
 
-            var cMod = compiled.GetModules()[0];
-            if (cMod == null)
-            {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine($"-=: Module is not compiled");
-
-                Console.ReadKey();
-
-                Debugger.Break();
-                Environment.Exit(3);
-            }
-
-            var cType = cMod.GetType($"{@namespace}.{@class}");
-            if (cType == null)
-            {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine($"-=: Type {@namespace}.{@class} not found");
-
-                Console.ReadKey();
-
-                Debugger.Break();
-                Environment.Exit(3);
-            }
-
-            var cMethod = cType.GetMethod(method);
-            if (cMethod == null)
-            {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine($"-=: Method {method} not found");
-
-                Console.ReadKey();
-
-                Debugger.Break();
-                Environment.Exit(3);
-            }
-
-
-            Console.WriteLine();
-            Console.ForegroundColor = oldForegroundColor;
-
-            // Object class
-            try
-            {
-                var classInstance = Activator.CreateInstance(cType, null);
-                cMethod.Invoke(classInstance, arguments);
-            }
-            // Static class
-            catch (MissingMethodException)
-            {
-                cMethod.Invoke(null, arguments);
-            }
-
-            Debugger.Break();
             Environment.Exit(0);
         }
     }

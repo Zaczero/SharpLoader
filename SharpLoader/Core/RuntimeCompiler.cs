@@ -18,14 +18,16 @@ namespace SharpLoader.Core
             _compiler = new CSharpCodeProvider();
         }
 
-        public bool Compile(out Assembly compiledAssembly, string[] assemblies, params string[] sources)
+        public bool Compile(string outputName, string compilerArguments, string[] assemblies, params string[] sources)
         {
             var parameters = new CompilerParameters
             {
                 TreatWarningsAsErrors = false,
                 IncludeDebugInformation = false,
-                GenerateInMemory = true,
-                GenerateExecutable = false,
+                GenerateInMemory = false,
+                GenerateExecutable = true,
+                OutputAssembly = outputName,
+                CompilerOptions = compilerArguments,
             };
 
             parameters.ReferencedAssemblies.AddRange(assemblies);
@@ -43,7 +45,6 @@ namespace SharpLoader.Core
                 Environment.Exit(4);
             }
 
-            compiledAssembly = result.CompiledAssembly;
             return true;
         }
     }
