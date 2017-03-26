@@ -41,10 +41,6 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="WinApi.cs" />
-    <EmbeddedResource Include="Yami\NetVars.cs" />
-    <EmbeddedResource Include="Yami\Memory.cs" />
-    <EmbeddedResource Include="Yami\EntryPoint.cs" />
-    <EmbeddedResource Include="Yami\WinApi.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

@@ -26,6 +26,7 @@ namespace SharpLoader
          * 2 - incorrect data value
          * 3 - entry point not found
          * 4 - compilation error
+         * 5 - source file not found
          */
 
         //todo zip
@@ -190,6 +191,17 @@ namespace SharpLoader
             var sources = new string[sourceFiles.Length];
             for (var i = 0; i < sources.Length; i++)
             {
+                if (!File.Exists(sourceFiles[i]))
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine($"-=: Source file not found ({sourceFiles[i]})");
+
+                    Console.ReadKey();
+
+                    Debugger.Break();
+                    Environment.Exit(5);
+                }
+
                 sources[i] = File.ReadAllText(sourceFiles[i]);
             }
 
