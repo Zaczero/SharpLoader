@@ -82,7 +82,7 @@ namespace SharpLoader
                 WinApi.WritePrivateProfileString("SharpLoader", "Assemblies", "", DataPath);
                 WinApi.WritePrivateProfileString("SharpLoader", "Sources", "", DataPath);
                 WinApi.WritePrivateProfileString("SharpLoader", "Output", "SharpLoader", DataPath);
-                WinApi.WritePrivateProfileString("SharpLoader", "Arguments", "", DataPath);
+                WinApi.WritePrivateProfileString("SharpLoader", "Arguments", "/platform:anycpu32bitpreferred", DataPath);
 
                 Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine($"-=: Default data file generated");
