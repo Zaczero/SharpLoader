@@ -28,6 +28,7 @@ namespace SharpLoader
          * 4 - compilation error
          */
 
+        //todo zip
         //todo remove unused references
 
         private const string Author = "Zaczero";
@@ -35,7 +36,7 @@ namespace SharpLoader
 
         private const int ReadBufferSize = 255;
 
-        private const string DataFileName = "data.ini";
+        private const string DataFileName = "SharpLoader.ini";
         private static readonly string DataPath = Path.Combine(Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName), DataFileName);
 
         public static void Main(string[] args)
@@ -123,6 +124,11 @@ namespace SharpLoader
             var @class            = classReadSb.ToString();
             var method            = methodReadSb.ToString();
             var arguments         = argumentsReadSb.ToString().Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
+
+            if (arguments.Length == 0)
+            {
+                arguments = null;
+            }
 
             // Check values
             if (assemblies.Length == 0)
@@ -244,7 +250,17 @@ namespace SharpLoader
             Console.WriteLine();
             Console.ForegroundColor = oldForegroundColor;
 
-            cMethod.Invoke(null, arguments);
+            // Object class
+            try
+            {
+                var classInstance = Activator.CreateInstance(cType, null);
+                cMethod.Invoke(classInstance, arguments);
+            }
+            // Static class
+            catch (MissingMethodException)
+            {
+                cMethod.Invoke(null, arguments);
+            }
 
             Debugger.Break();
             Environment.Exit(0);
