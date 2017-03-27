@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
-using System.Reflection;
 using System.Text;
 using SharpLoader.Core;
 
@@ -108,7 +107,7 @@ namespace SharpLoader
 
             var assemblies        = assembliesReadSb.ToString().Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
             var sourceFiles       = sourceFilesReadSb.ToString().Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
-            var outputName        = $"{outputNameReadSb}-{DateTime.Now.ToString("dd-MM-yyyy")}.exe";
+            var outputName        = $"{outputNameReadSb}-{DateTime.Now:dd-MM-yyyy}.exe";
             var compilerArguments = compilerArgumentsReadSb.ToString();
 
             // Check values
