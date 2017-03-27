@@ -171,94 +171,129 @@ namespace SharpLoader.Core
                 }
 
                 // Get arguments
-                int arg;
+                int amount;
                 var tagLength = str.Substring(tagIndex).IndexOf(">", StringComparison.Ordinal);
                 if (tagLength == -1)
                 {
-                    throw new Exception();
+                    throw new Exception("close tag not found");
                 }
+                // Arguments are given
                 if (tagLength > 7)
                 {
-                    arg = int.Parse(str.Substring(tagIndex + 7, tagLength - 7));
+                    var argStr = str.Substring(tagIndex + 7, tagLength - 7);
+
+                    // Multiple argument
+                    if (argStr.IndexOf(' ') != -1)
+                    {
+                        var argsStr = argStr.Split(new[] {' '}, StringSplitOptions.RemoveEmptyEntries);
+                        if (argsStr.Length != 2)
+                        {
+                            throw new Exception("bad argument value");
+                        }
+
+                        // Parse
+                        var args = new int[argsStr.Length];
+                        for (var i = 0; i < argsStr.Length; i++)
+                        {
+                            if (!int.TryParse(argsStr[0], out args[i]))
+                            {
+                                throw new Exception("bad argument value");
+                            }
+                        }
+
+                        amount = _rnd.Next(args[0], args[1] + 1);
+                    }
+                    // Single argument
+                    else
+                    {
+                        if (!int.TryParse(argStr, out amount))
+                        {
+                            throw new Exception("bad argument value");
+                        }
+                    }
                 }
+                // No arguments
                 else
                 {
-                    arg = _rnd.Next(3, 9);
+                    amount = _rnd.Next(3, 8 + 1);
                 }
 
                 // Add trash
                 var trash = string.Empty;
-                for (var i = 0; i < arg; i++)
+                for (var i = 0; i < amount; i++)
                 {
-                    // 25%
-                    switch (_rnd.Next(0, 4))
+                    var rndValue = _rnd.Next(0, 4);
+                    if (rndValue == 0)
                     {
-                        case 0:
+                        // string value
+                        var varValue = GetRandomString(_rnd.Next(8, 33));
+                        string operation;
+
+                        switch (_rnd.Next(0, 3))
                         {
-                            // string value
-                            var varValue = GetRandomString(_rnd.Next(8, 32));
-                            var operation = string.Empty;
-
-                            switch (_rnd.Next(0, 3))
+                            case 0:
                             {
-                                case 0:
-                                {
-                                    operation = "Normalize()";
-                                    break;
-                                }
-                                case 1:
-                                {
-                                    operation = "ToLower()";
-                                    break;
-                                }
-                                case 2:
-                                {
-                                    operation = "ToUpper()";
-                                    break;
-                                }
+                                operation = "Normalize()";
+                                break;
                             }
- 
-                            trash += $"\"{varValue}\".{operation};";
-                            break;
+                            case 1:
+                            {
+                                operation = "ToLower()";
+                                break;
+                            }
+                            case 2:
+                            {
+                                operation = "ToUpper()";
+                                break;
+                            }
+                            default:
+                            {
+                                throw new Exception("bad random value");
+                            }
                         }
-                        default:
+
+                        trash += $"\"{varValue}\".{operation};";
+                    }
+                    else
+                    {
+                        // numeric value
+                        var varName = GetVariableName(str);
+                        var operation = _rnd.Next(0, 2) == 0 ? '+' : '-';
+
+                        string varType;
+                        int varValue;
+                        int varChange;
+
+                        switch (_rnd.Next(0, 3))
                         {
-                            // numeric value
-                            var varName = GetVariableName(str);
-                            var operation = _rnd.Next(0, 2) == 0 ? '+' : '-';
-
-                            var varType = string.Empty;
-                            var varValue = 0;
-                            var varChange = 0;
-
-                            switch (_rnd.Next(0, 3))
+                            case 0:
                             {
-                                case 0:
-                                {
-                                    varType = "byte";
-                                    varChange = _rnd.Next(1, byte.MaxValue);
-                                    varValue = operation == '+' ? _rnd.Next(byte.MinValue, byte.MaxValue - varChange) : _rnd.Next(byte.MinValue + varChange, byte.MaxValue);
-                                    break;
-                                }
-                                case 1:
-                                {
-                                    varType = "short";
-                                    varChange = _rnd.Next(1, short.MaxValue);
-                                    varValue = operation == '+' ? _rnd.Next(short.MinValue, short.MaxValue - varChange) : _rnd.Next(short.MinValue + varChange, short.MaxValue);
-                                    break;
-                                }
-                                case 2:
-                                {
-                                    varType = "int";
-                                    varChange = _rnd.Next(1, int.MaxValue);
-                                    varValue = operation == '+' ? _rnd.Next(int.MinValue, int.MaxValue - varChange) : _rnd.Next(int.MinValue + varChange, int.MaxValue);
-                                    break;
-                                }
+                                varType = "byte";
+                                varChange = _rnd.Next(1, byte.MaxValue);
+                                varValue = operation == '+' ? _rnd.Next(byte.MinValue, byte.MaxValue - varChange) : _rnd.Next(byte.MinValue + varChange, byte.MaxValue);
+                                break;
                             }
-
-                            trash += $"{varType} {varName}={varValue}\u0000{varName}{operation}={varChange};";
-                            break;
+                            case 1:
+                            {
+                                varType = "short";
+                                varChange = _rnd.Next(1, short.MaxValue);
+                                varValue = operation == '+' ? _rnd.Next(short.MinValue, short.MaxValue - varChange) : _rnd.Next(short.MinValue + varChange, short.MaxValue);
+                                break;
+                            }
+                            case 2:
+                            {
+                                varType = "int";
+                                varChange = _rnd.Next(1, int.MaxValue);
+                                varValue = operation == '+' ? _rnd.Next(int.MinValue, int.MaxValue - varChange) : _rnd.Next(int.MinValue + varChange, int.MaxValue);
+                                break;
+                            }
+                            default:
+                            {
+                                throw new Exception("bad random value");
+                            }
                         }
+
+                        trash += $"{varType} {varName}={varValue}\u0000{varName}{operation}={varChange};";
                     }
                 }
 
@@ -285,10 +320,11 @@ namespace SharpLoader.Core
                 var endTagIndex = afterStr.IndexOf("<swap/>", StringComparison.Ordinal);
                 if (endTagIndex == -1)
                 {
-                    throw new Exception("<swap/> not found");
+                    throw new Exception("close tag not found");
                 }
                 var innerStr = afterStr.Substring(0, endTagIndex);
 
+                // Swap blocks
                 if (innerStr.IndexOf("<block>", StringComparison.Ordinal) != -1)
                 {
                     var blocks = new List<string>();
@@ -340,6 +376,7 @@ namespace SharpLoader.Core
                     var output = swapped.Aggregate(string.Empty, (current, s) => current + s);
                     str = str.Insert(tagIndex, output);
                 }
+                // Swap lines
                 else
                 {
                     // Split

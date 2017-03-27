@@ -15,6 +15,7 @@ namespace SharpLoader
         /* Limitations:
          * doesn't support $ strings
          * doesn't support VS code
+		 * doesn't support => properties
          */
 
         /* Exit codes:
@@ -50,7 +51,7 @@ namespace SharpLoader
                     var result = int.TryParse(args[i + 1], out seed);
                     if (!result)
                     {
-                        throw new Exception("incorrect seed");
+                        throw new Exception("bad seed value");
                     }
                 }
             }
