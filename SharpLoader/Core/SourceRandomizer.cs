@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace SharpLoader.Core
 {
@@ -44,7 +43,7 @@ namespace SharpLoader.Core
 
             while (true)
             {
-                varName = GetRandomString(_rnd.Next(8, 16));
+                varName = GetRandomString(_rnd.Next(8, 16 + 1));
                 if (!str.Contains(varName))
                 {
                     break;
@@ -114,7 +113,7 @@ namespace SharpLoader.Core
                     insideString = !insideString;
                 }
 
-                // Skip strings
+                // Encode non-strings
                 if (!insideString)
                 {
                     // Encode
@@ -170,63 +169,92 @@ namespace SharpLoader.Core
                     break;
                 }
 
-                // Get arguments
-                int amount;
+                int trashAmount;
+
+                // Check for close tag
                 var tagLength = str.Substring(tagIndex).IndexOf(">", StringComparison.Ordinal);
                 if (tagLength == -1)
                 {
                     throw new Exception("close tag not found");
                 }
-                // Arguments are given
+
+                // Are arguments given?
                 if (tagLength > 7)
                 {
+                    // Substring arguments
                     var argStr = str.Substring(tagIndex + 7, tagLength - 7);
 
-                    // Multiple argument
+                    // Multiple arguments
                     if (argStr.IndexOf(' ') != -1)
                     {
                         var argsStr = argStr.Split(new[] {' '}, StringSplitOptions.RemoveEmptyEntries);
                         if (argsStr.Length != 2)
                         {
-                            throw new Exception("bad argument value");
+                            throw new Exception($"invalid argument count: {argsStr.Length}");
                         }
 
                         // Parse
                         var args = new int[argsStr.Length];
                         for (var i = 0; i < argsStr.Length; i++)
                         {
-                            if (!int.TryParse(argsStr[0], out args[i]))
+                            if (!int.TryParse(argsStr[i], out args[i]))
                             {
-                                throw new Exception("bad argument value");
+                                throw new Exception($"invalid argument value: {argsStr[i]}");
                             }
                         }
 
-                        amount = _rnd.Next(args[0], args[1] + 1);
+                        // Check values
+                        if (args[0] > args[1] + 1)
+                        {
+                            throw new Exception($"invalid argument value: {args[0]} <= {args[1] + 1}");
+                        }
+
+                        trashAmount = _rnd.Next(args[0], args[1] + 1);
                     }
                     // Single argument
                     else
                     {
-                        if (!int.TryParse(argStr, out amount))
+                        int arg;
+                        if (!int.TryParse(argStr, out arg))
                         {
-                            throw new Exception("bad argument value");
+                            throw new Exception($"invalid argument value: {argStr}");
                         }
+
+                        trashAmount = _rnd.Next(1, arg + 1);
                     }
                 }
                 // No arguments
                 else
                 {
-                    amount = _rnd.Next(3, 8 + 1);
+                    trashAmount = _rnd.Next(1, 6 + 1);
+                }
+
+                // Indexes:
+                // 0 - string trash
+                // 1 - value trash
+                var trashChances = new[] { 1, 3 };
+                var allTrashChance = trashChances.Sum();
+
+                // Add all before values
+                for (var j = 1; j < trashChances.Length; j++)
+                {
+                    for (var k = 0; k < j; k++)
+                    {
+                        trashChances[j] += trashChances[k];
+                    }
                 }
 
                 // Add trash
                 var trash = string.Empty;
-                for (var i = 0; i < amount; i++)
+                for (var i = 0; i < trashAmount; i++)
                 {
-                    var rndValue = _rnd.Next(0, 4);
-                    if (rndValue == 0)
+                    var trashChancesIndex = 0;
+                    var rndValue = _rnd.Next(0, allTrashChance);
+
+                    if (rndValue < trashChances[trashChancesIndex++])
                     {
-                        // string value
-                        var varValue = GetRandomString(_rnd.Next(8, 33));
+                        // string trash
+                        var varValue = GetRandomString(_rnd.Next(8, 32 + 1));
                         string operation;
 
                         switch (_rnd.Next(0, 3))
@@ -248,15 +276,15 @@ namespace SharpLoader.Core
                             }
                             default:
                             {
-                                throw new Exception("bad random value");
+                                throw new Exception("invalid switch value");
                             }
                         }
 
                         trash += $"\"{varValue}\".{operation};";
                     }
-                    else
+                    else if(rndValue < trashChances[trashChancesIndex++])
                     {
-                        // numeric value
+                        // value trash
                         var varName = GetVariableName(str);
                         var operation = _rnd.Next(0, 2) == 0 ? '+' : '-';
 
@@ -289,7 +317,7 @@ namespace SharpLoader.Core
                             }
                             default:
                             {
-                                throw new Exception("bad random value");
+                                throw new Exception("invalid switch value");
                             }
                         }
 
@@ -313,15 +341,19 @@ namespace SharpLoader.Core
                     break;
                 }
 
-                var tagLength = 6;
-                var endTagLength = 7;
+                const int tagLength = 6;
+                const int endTagLength = 7;
 
                 var afterStr = str.Substring(tagIndex + tagLength);
+                
+                // Check for close tag
                 var endTagIndex = afterStr.IndexOf("<swap/>", StringComparison.Ordinal);
                 if (endTagIndex == -1)
                 {
                     throw new Exception("close tag not found");
                 }
+
+                // Substring inner content
                 var innerStr = afterStr.Substring(0, endTagIndex);
 
                 // Swap blocks
@@ -332,6 +364,7 @@ namespace SharpLoader.Core
                     // Find blocks
                     while (true)
                     {
+                        // Are blocks available?
                         var blockIndex = innerStr.IndexOf("<block>", StringComparison.Ordinal);
                         if (blockIndex == -1)
                         {
@@ -340,9 +373,9 @@ namespace SharpLoader.Core
                             break;
                         }
 
-                        var blockTagLength = 7;
+                        const int blockTagLength = 7;
 
-                        // Get block
+                        // Get block's content
                         var innerBlockStr = innerStr.Substring(0, blockIndex);
                         blocks.Add(innerBlockStr);
 
@@ -380,11 +413,11 @@ namespace SharpLoader.Core
                 else
                 {
                     // Split
-                    var blocks = innerStr.Split(new [] {';'}, StringSplitOptions.RemoveEmptyEntries);
-                    var swapped = new string[blocks.Length];
+                    var lines = innerStr.Split(new [] {';'}, StringSplitOptions.RemoveEmptyEntries);
+                    var swapped = new string[lines.Length];
 
                     // Swap
-                    foreach (var block in blocks)
+                    foreach (var line in lines)
                     {
                         // Find index to swap into
                         int swapIndex;
@@ -397,7 +430,7 @@ namespace SharpLoader.Core
                             }
                         }
 
-                        swapped[swapIndex] = block;
+                        swapped[swapIndex] = line;
                     }
 
                     // Remove old
@@ -432,7 +465,7 @@ namespace SharpLoader.Core
                 }
                 else
                 {
-                    // Skip not-strings
+                    // Skip non-strings
                     if (!insideString)
                     {
                         continue;

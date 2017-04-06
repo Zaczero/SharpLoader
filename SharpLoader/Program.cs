@@ -26,7 +26,7 @@ namespace SharpLoader
          * 5 - source file not found
          */
 
-        //todo zip
+        // todo zip
 
         private const string Author = "Zaczero";
         private const string Version = "1.0";
@@ -50,7 +50,7 @@ namespace SharpLoader
                     var result = int.TryParse(args[i + 1], out seed);
                     if (!result)
                     {
-                        throw new Exception("bad seed value");
+                        throw new Exception($"invalid seed value: {args[i + 1]}");
                     }
                 }
             }
