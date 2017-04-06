@@ -82,6 +82,7 @@ namespace SharpLoader
                 WinApi.WritePrivateProfileString("SharpLoader", "Assemblies", "", DataPath);
                 WinApi.WritePrivateProfileString("SharpLoader", "Sources", "", DataPath);
                 WinApi.WritePrivateProfileString("SharpLoader", "Output", "SharpLoader", DataPath);
+                WinApi.WritePrivateProfileString("SharpLoader", "AutoRun", false.ToString(), DataPath);
                 WinApi.WritePrivateProfileString("SharpLoader", "Arguments", "/platform:anycpu32bitpreferred", DataPath);
 
                 Console.ForegroundColor = ConsoleColor.Red;
@@ -98,16 +99,19 @@ namespace SharpLoader
             var assembliesReadSb  = new StringBuilder(ReadBufferSize);
             var sourceFilesReadSb = new StringBuilder(ReadBufferSize);
             var outputNameReadSb = new StringBuilder(ReadBufferSize);
+            var autoRunReadSb = new StringBuilder(ReadBufferSize);
             var compilerArgumentsReadSb = new StringBuilder(ReadBufferSize);
 
             WinApi.GetPrivateProfileString("SharpLoader", "Assemblies", string.Empty, assembliesReadSb, ReadBufferSize, DataPath);
             WinApi.GetPrivateProfileString("SharpLoader", "Sources", string.Empty, sourceFilesReadSb, ReadBufferSize, DataPath);
             WinApi.GetPrivateProfileString("SharpLoader", "Output", string.Empty, outputNameReadSb, ReadBufferSize, DataPath);
+            WinApi.GetPrivateProfileString("SharpLoader", "AutoRun", string.Empty, autoRunReadSb, ReadBufferSize, DataPath);
             WinApi.GetPrivateProfileString("SharpLoader", "Arguments", string.Empty, compilerArgumentsReadSb, ReadBufferSize, DataPath);
 
             var assemblies        = assembliesReadSb.ToString().Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
             var sourceFiles       = sourceFilesReadSb.ToString().Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
             var outputName        = $"{outputNameReadSb}-{DateTime.Now:dd-MM-yyyy}.exe";
+            var autoRun           = autoRunReadSb.ToString() == "true";
             var compilerArguments = compilerArgumentsReadSb.ToString();
 
             // Check values
@@ -170,6 +174,11 @@ namespace SharpLoader
             Console.WriteLine("-=: Compiling...");
 
             compiler.Compile(outputName, compilerArguments, assemblies, sources);
+
+            if (autoRun)
+            {
+                Process.Start(outputName);
+            }
 
             Console.ForegroundColor = ConsoleColor.Green;
             Console.Write($"-=: DONE [{outputName}] (press any key to exit)");
