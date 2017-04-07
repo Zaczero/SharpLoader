@@ -14,7 +14,7 @@ namespace SharpLoader
         /* Limitations:
          * doesn't support $ strings
          * doesn't support VS code
-		 * doesn't support => properties
+	 * doesn't support => properties
          */
 
         /* Exit codes:
@@ -96,10 +96,10 @@ namespace SharpLoader
             Console.ForegroundColor = ConsoleColor.White;
             Console.WriteLine("-=: Reading...");
 
-            var assembliesReadSb  = new StringBuilder(ReadBufferSize);
-            var sourceFilesReadSb = new StringBuilder(ReadBufferSize);
-            var outputNameReadSb = new StringBuilder(ReadBufferSize);
-            var autoRunReadSb = new StringBuilder(ReadBufferSize);
+            var assembliesReadSb        = new StringBuilder(ReadBufferSize);
+            var sourceFilesReadSb       = new StringBuilder(ReadBufferSize);
+            var outputNameReadSb        = new StringBuilder(ReadBufferSize);
+            var autoRunReadSb           = new StringBuilder(ReadBufferSize);
             var compilerArgumentsReadSb = new StringBuilder(ReadBufferSize);
 
             WinApi.GetPrivateProfileString("SharpLoader", "Assemblies", string.Empty, assembliesReadSb, ReadBufferSize, DataPath);
