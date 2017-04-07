@@ -425,8 +425,22 @@ namespace SharpLoader.Core
                 // Substring inner content
                 var innerStr = afterStr.Substring(0, endTagIndex);
 
-                var blocks = GetCodeBlocks(innerStr);
+                var rawBlocks = GetCodeBlocks(innerStr);
+                var emptyBlocks = _rnd.Next(0, rawBlocks.Length / 2 + 1);
+                var blocks = new string[rawBlocks.Length + emptyBlocks];
 
+                // Fill blocks
+                for (var i = 0; i < rawBlocks.Length; i++)
+                {
+                    blocks[i] = rawBlocks[i];
+                }
+                for (var i = rawBlocks.Length; i < blocks.Length; i++)
+                {
+                    blocks[i] = string.Empty;
+                }
+
+                var leftXors = new int[blocks.Length];
+                var rightXors = new int[blocks.Length];
                 var switchValues = new int[blocks.Length];
 
                 // Generate switch values
@@ -434,11 +448,15 @@ namespace SharpLoader.Core
                 {
                     while (true)
                     {
-                        var rndValue = _rnd.Next(int.MinValue, int.MaxValue);
+                        var leftXor = _rnd.Next(int.MinValue, int.MaxValue);
+                        var rightXor = _rnd.Next(int.MinValue, int.MaxValue);
+                        var switchValue = leftXor ^ rightXor;
 
-                        if (switchValues.All(v => v != rndValue))
+                        if (switchValues.All(v => v != switchValue))
                         {
-                            switchValues[i] = rndValue;
+                            leftXors[i] = leftXor;
+                            rightXors[i] = rightXor;
+                            switchValues[i] = switchValue;
                             break;
                         }
                     }
@@ -447,6 +465,13 @@ namespace SharpLoader.Core
                 // Generate variable names
                 var switchVarName = GetVariableName(str);
                 var exitLoopVarName = GetVariableName(str);
+
+                var funcName = GetVariableName(str);
+                var leftName = GetVariableName(str);
+                var rightName = GetVariableName(str);
+
+                // Generate xor function
+                var xorFunc = $"Action<int,int>{funcName}=({leftName},{rightName})=>{switchVarName}={leftName}^{rightName};";
 
                 var cases = new string[switchValues.Length];
 
@@ -461,13 +486,13 @@ namespace SharpLoader.Core
                     // Not last
                     else
                     {
-                        cases[i] = $"case {switchValues[i]}:{{{blocks[i]}{switchVarName}={switchValues[i + 1]}\0break\0}}<block>";
+                        cases[i] = $"case {switchValues[i]}:{{{blocks[i]}{funcName}({leftXors[i + 1]},{rightXors[i + 1]});\0break\0}}<block>";
                     }
                 }
 
                 // Generate output
                 var caseOutput = cases.Aggregate(string.Empty, (current, c) => current + c);
-                var output = $"<swap>int {switchVarName}={switchValues[0]};bool {exitLoopVarName}=true;<swap/>while({exitLoopVarName}){{switch({switchVarName}){{<swap>{caseOutput}<swap/>}}}}";
+                var output = $"<swap>int {switchVarName}={switchValues[0]}\0{xorFunc}bool {exitLoopVarName}=true;<swap/>while({exitLoopVarName}){{switch({switchVarName}){{<swap>{caseOutput}<swap/>}}}}";
 
                 // Remove old
                 str = str.Remove(tagIndex, tagLength + endTagIndex + endTagLength);
