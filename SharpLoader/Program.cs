@@ -13,8 +13,10 @@ namespace SharpLoader
 
         /* Limitations:
          * doesn't support $ strings
+         * doesn't support @ strings
          * doesn't support VS code
-	 * doesn't support => properties
+         * doesn't support => properties
+         * doesn't support few unicode values
          */
 
         /* Exit codes:
@@ -26,15 +28,13 @@ namespace SharpLoader
          * 5 - source file not found
          */
 
-        // todo zip
-
         private const string Author = "Zaczero";
         private const string Version = "1.0";
 
         private const int ReadBufferSize = 255;
 
-        private const string DataFileName = "SharpLoader.ini";
-        private static readonly string DataPath = Path.Combine(Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName), DataFileName);
+        private const string ConfigFileName = "SharpLoader.ini";
+        private static readonly string ConfigPath = Path.Combine(Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName), ConfigFileName);
 
         public static void Main(string[] args)
         {
@@ -74,19 +74,20 @@ namespace SharpLoader
             Console.WriteLine();
 
             // Data file not found
-            if (!File.Exists(DataFileName))
+            if (!File.Exists(ConfigFileName))
             {
                 Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine($"-=: Data file not found ({DataFileName})");
+                Console.WriteLine($"-=: Config file not found ({ConfigFileName})");
 
-                WinApi.WritePrivateProfileString("SharpLoader", "Assemblies", "", DataPath);
-                WinApi.WritePrivateProfileString("SharpLoader", "Sources", "", DataPath);
-                WinApi.WritePrivateProfileString("SharpLoader", "Output", "SharpLoader", DataPath);
-                WinApi.WritePrivateProfileString("SharpLoader", "AutoRun", "false", DataPath);
-                WinApi.WritePrivateProfileString("SharpLoader", "Arguments", "/platform:anycpu32bitpreferred", DataPath);
+                WinApi.WritePrivateProfileString("SharpLoader", "Assemblies", "", ConfigPath);
+                WinApi.WritePrivateProfileString("SharpLoader", "Directory", "", ConfigPath);
+                WinApi.WritePrivateProfileString("SharpLoader", "Sources", "", ConfigPath);
+                WinApi.WritePrivateProfileString("SharpLoader", "Output", "SharpLoader", ConfigPath);
+                WinApi.WritePrivateProfileString("SharpLoader", "AutoRun", "false", ConfigPath);
+                WinApi.WritePrivateProfileString("SharpLoader", "Arguments", "/platform:anycpu32bitpreferred", ConfigPath);
 
                 Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine($"-=: Default data file generated");
+                Console.WriteLine($"-=: Default config file generated");
 
                 Console.ReadKey();
 
@@ -96,18 +97,21 @@ namespace SharpLoader
             Console.ForegroundColor = ConsoleColor.White;
             Console.WriteLine("-=: Reading...");
 
+            var directoryReadSb         = new StringBuilder(ReadBufferSize);
             var assembliesReadSb        = new StringBuilder(ReadBufferSize);
             var sourceFilesReadSb       = new StringBuilder(ReadBufferSize);
             var outputNameReadSb        = new StringBuilder(ReadBufferSize);
             var autoRunReadSb           = new StringBuilder(ReadBufferSize);
             var compilerArgumentsReadSb = new StringBuilder(ReadBufferSize);
 
-            WinApi.GetPrivateProfileString("SharpLoader", "Assemblies", string.Empty, assembliesReadSb, ReadBufferSize, DataPath);
-            WinApi.GetPrivateProfileString("SharpLoader", "Sources", string.Empty, sourceFilesReadSb, ReadBufferSize, DataPath);
-            WinApi.GetPrivateProfileString("SharpLoader", "Output", string.Empty, outputNameReadSb, ReadBufferSize, DataPath);
-            WinApi.GetPrivateProfileString("SharpLoader", "AutoRun", string.Empty, autoRunReadSb, ReadBufferSize, DataPath);
-            WinApi.GetPrivateProfileString("SharpLoader", "Arguments", string.Empty, compilerArgumentsReadSb, ReadBufferSize, DataPath);
+            WinApi.GetPrivateProfileString("SharpLoader", "Directory", string.Empty, directoryReadSb, ReadBufferSize, ConfigPath);
+            WinApi.GetPrivateProfileString("SharpLoader", "Assemblies", string.Empty, assembliesReadSb, ReadBufferSize, ConfigPath);
+            WinApi.GetPrivateProfileString("SharpLoader", "Sources", string.Empty, sourceFilesReadSb, ReadBufferSize, ConfigPath);
+            WinApi.GetPrivateProfileString("SharpLoader", "Output", string.Empty, outputNameReadSb, ReadBufferSize, ConfigPath);
+            WinApi.GetPrivateProfileString("SharpLoader", "AutoRun", string.Empty, autoRunReadSb, ReadBufferSize, ConfigPath);
+            WinApi.GetPrivateProfileString("SharpLoader", "Arguments", string.Empty, compilerArgumentsReadSb, ReadBufferSize, ConfigPath);
 
+            var directory         = directoryReadSb.ToString();
             var assemblies        = assembliesReadSb.ToString().Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
             var sourceFiles       = sourceFilesReadSb.ToString().Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
             var outputName        = $"{outputNameReadSb}-{DateTime.Now:dd-MM-yyyy}.exe";
@@ -149,6 +153,12 @@ namespace SharpLoader
             var sources = new string[sourceFiles.Length];
             for (var i = 0; i < sources.Length; i++)
             {
+                // Add directory to source files paths
+                if (!string.IsNullOrWhiteSpace(directory))
+                {
+                    sourceFiles[i] = Path.Combine(directory, sourceFiles[i]);
+                }
+
                 if (!File.Exists(sourceFiles[i]))
                 {
                     Console.ForegroundColor = ConsoleColor.Red;
@@ -175,8 +185,9 @@ namespace SharpLoader
 
             compiler.Compile(outputName, compilerArguments, assemblies, sources);
 
-            if (autoRun)
+            if (autoRun && File.Exists(outputName))
             {
+                Console.WriteLine("-=: Starting...");
                 Process.Start(outputName);
             }
 
