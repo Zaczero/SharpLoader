@@ -518,7 +518,7 @@ namespace SharpLoader.Core
         {
             string[] blocks;
 
-            // Swap blocks
+            // Get blocks
             if (str.IndexOf("<block>", StringComparison.Ordinal) != -1)
             {
                 var blockList = new List<string>();
@@ -547,7 +547,7 @@ namespace SharpLoader.Core
 
                 blocks = blockList.ToArray();
             }
-            // Swap lines
+            // Get lines
             else
             {
                 // Split
