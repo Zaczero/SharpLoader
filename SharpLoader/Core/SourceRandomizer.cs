@@ -18,6 +18,7 @@ namespace SharpLoader.Core
         {
             Encode(ref source);
             Trash(ref source);
+            Flow(ref source);
             Swap(ref source);
             Decode(ref source);
         }
@@ -118,7 +119,8 @@ namespace SharpLoader.Core
                 {
                     // Encode
                     if (str[i] == '\r' ||
-                        str[i] == '\n')
+                        str[i] == '\n' ||
+                        str[i] == '\t')
                     {
                         continue;
                     }
@@ -330,6 +332,94 @@ namespace SharpLoader.Core
             }
         }
 
+        private void Flow(ref string str)
+        {
+            while (true)
+            {
+                // Check for tag
+                var tagIndex = str.IndexOf("<flow>", StringComparison.Ordinal);
+                if (tagIndex == -1)
+                {
+                    break;
+                }
+
+                const int tagLength = 6;
+                const int endTagLength = 7;
+
+                var afterStr = str.Substring(tagIndex + tagLength);
+
+                // Check for close tag
+                var endTagIndex = afterStr.IndexOf("<flow/>", StringComparison.Ordinal);
+                if (endTagIndex == -1)
+                {
+                    throw new Exception("close tag not found");
+                }
+
+                // Substring inner content
+                var innerStr = afterStr.Substring(0, endTagIndex);
+
+                var blocks = GetCodeBlocks(innerStr);
+
+                var switchValues = new int[blocks.Length];
+
+                // Generate switch values
+                for (var i = 0; i < switchValues.Length; i++)
+                {
+                    while (true)
+                    {
+                        var rndValue = _rnd.Next(int.MinValue, int.MaxValue);
+
+                        if (switchValues.All(v => v != rndValue))
+                        {
+                            switchValues[i] = rndValue;
+                            break;
+                        }
+                    }
+                }
+
+                // Generate variable names
+                var switchVarName = GetVariableName(str);
+                string exitLoopVarName;
+
+                while (true)
+                {
+                    exitLoopVarName = GetVariableName(str);
+
+                    if (exitLoopVarName != switchVarName)
+                    {
+                        break;
+                    }
+                }
+
+                var cases = new string[switchValues.Length];
+
+                // Fill cases
+                for (var i = 0; i < cases.Length; i++)
+                {
+                    // Last
+                    if (i + 1 == cases.Length)
+                    {
+                        cases[i] = $"case {switchValues[i]}:{{{blocks[i]}{exitLoopVarName}=false\u0000break\u0000}}";
+                    }
+                    // Not last
+                    else
+                    {
+                        cases[i] = $"case {switchValues[i]}:{{{blocks[i]}{switchVarName}={switchValues[i + 1]}\u0000break\u0000}}<block>";
+                    }
+                }
+
+                // Generate output
+                var caseOutput = cases.Aggregate(string.Empty, (current, c) => current + c);
+                var output = $"int {switchVarName}={switchValues[0]}\u0000bool {exitLoopVarName}=true\u0000while({exitLoopVarName}){{switch({switchVarName}){{<swap>{caseOutput}<swap/>}}}}";
+
+                // Remove old
+                str = str.Remove(tagIndex, tagLength + endTagIndex + endTagLength);
+
+                // Insert new
+                str = str.Insert(tagIndex, output);
+            }
+        }
+
         private void Swap(ref string str)
         {
             while (true)
@@ -356,90 +446,33 @@ namespace SharpLoader.Core
                 // Substring inner content
                 var innerStr = afterStr.Substring(0, endTagIndex);
 
-                // Swap blocks
-                if (innerStr.IndexOf("<block>", StringComparison.Ordinal) != -1)
-                {
-                    var blocks = new List<string>();
+                var blocks = GetCodeBlocks(innerStr);
 
-                    // Find blocks
+                var swapped = new string[blocks.Length];
+
+                // Swap
+                foreach (var b in blocks)
+                {
+                    // Find index to swap into
+                    int swapIndex;
                     while (true)
                     {
-                        // Are blocks available?
-                        var blockIndex = innerStr.IndexOf("<block>", StringComparison.Ordinal);
-                        if (blockIndex == -1)
+                        swapIndex = _rnd.Next(0, swapped.Length);
+                        if (swapped[swapIndex] == null)
                         {
-                            // Add last block
-                            blocks.Add(innerStr);
                             break;
                         }
-
-                        const int blockTagLength = 7;
-
-                        // Get block's content
-                        var innerBlockStr = innerStr.Substring(0, blockIndex);
-                        blocks.Add(innerBlockStr);
-
-                        // Remove from search
-                        innerStr = innerStr.Remove(0, blockIndex + blockTagLength);
                     }
 
-                    var swapped = new string[blocks.Count];
-
-                    // Swap
-                    foreach (var block in blocks)
-                    {
-                        // Find index to swap into
-                        int swapIndex;
-                        while (true)
-                        {
-                            swapIndex = _rnd.Next(0, swapped.Length);
-                            if (swapped[swapIndex] == null)
-                            {
-                                break;
-                            }
-                        }
-
-                        swapped[swapIndex] = block;
-                    }
-
-                    // Remove old
-                    str = str.Remove(tagIndex, tagLength + endTagIndex + endTagLength);
-
-                    // Insert new
-                    var output = swapped.Aggregate(string.Empty, (current, s) => current + s);
-                    str = str.Insert(tagIndex, output);
+                    swapped[swapIndex] = b;
                 }
-                // Swap lines
-                else
-                {
-                    // Split
-                    var lines = innerStr.Split(new [] {';'}, StringSplitOptions.RemoveEmptyEntries);
-                    var swapped = new string[lines.Length];
 
-                    // Swap
-                    foreach (var line in lines)
-                    {
-                        // Find index to swap into
-                        int swapIndex;
-                        while (true)
-                        {
-                            swapIndex = _rnd.Next(0, swapped.Length);
-                            if (swapped[swapIndex] == null)
-                            {
-                                break;
-                            }
-                        }
+                // Remove old
+                str = str.Remove(tagIndex, tagLength + endTagIndex + endTagLength);
 
-                        swapped[swapIndex] = line;
-                    }
-
-                    // Remove old
-                    str = str.Remove(tagIndex, tagLength + endTagIndex + endTagLength);
-
-                    // Insert new
-                    var output = swapped.Aggregate(string.Empty, (current, s) => current + (s + ';'));
-                    str = str.Insert(tagIndex, output);
-                }
+                // Insert new
+                var output = swapped.Aggregate(string.Empty, (current, s) => current + s);
+                str = str.Insert(tagIndex, output);
             }
         }
 
@@ -463,24 +496,71 @@ namespace SharpLoader.Core
                 {
                     str = str.Remove(i, 1).Insert(i, ";");
                 }
-                else
-                {
-                    // Skip non-strings
-                    if (!insideString)
-                    {
-                        continue;
-                    }
 
-                    if (str[i] == '\u0001')
-                    {
-                        str = str.Remove(i, 1).Insert(i, "<");
-                    }
-                    else if (str[i] == '\u0002')
-                    {
-                        str = str.Remove(i, 1).Insert(i, ">");
-                    }
+                // Skip non-strings
+                if (!insideString)
+                {
+                    continue;
+                }
+
+                if (str[i] == '\u0001')
+                {
+                    str = str.Remove(i, 1).Insert(i, "<");
+                }
+                else if (str[i] == '\u0002')
+                {
+                    str = str.Remove(i, 1).Insert(i, ">");
                 }
             }
+        }
+
+        private string[] GetCodeBlocks(string str)
+        {
+            string[] blocks;
+
+            // Swap blocks
+            if (str.IndexOf("<block>", StringComparison.Ordinal) != -1)
+            {
+                var blockList = new List<string>();
+
+                // Find blocks
+                while (true)
+                {
+                    // Are blocks available?
+                    var blockIndex = str.IndexOf("<block>", StringComparison.Ordinal);
+                    if (blockIndex == -1)
+                    {
+                        // Add last block
+                        blockList.Add(str);
+                        break;
+                    }
+
+                    const int blockTagLength = 7;
+
+                    // Get block's content
+                    var innerBlockStr = str.Substring(0, blockIndex);
+                    blockList.Add(innerBlockStr);
+
+                    // Remove from search
+                    str = str.Remove(0, blockIndex + blockTagLength);
+                }
+
+                blocks = blockList.ToArray();
+            }
+            // Swap lines
+            else
+            {
+                // Split
+                var lines = str.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
+                for (var i = 0; i < lines.Length; i++)
+                {
+                    lines[i] += ';';
+                }
+
+                blocks = lines;
+            }
+
+            return blocks;
         }
     }
 }
