@@ -38,18 +38,29 @@ namespace SharpLoader.Core
             return rndStrSb.ToString();
         }
 
+        private string _getVariableStringLastStr;
+        private List<string> _getVariableStringGenerated;
         private string GetVariableName(string str)
         {
+            // New source file
+            if (_getVariableStringLastStr != str)
+            {
+                _getVariableStringLastStr = str;
+                _getVariableStringGenerated = new List<string>();
+            }
+
             string varName;
 
             while (true)
             {
                 varName = GetRandomString(_rnd.Next(8, 16 + 1));
-                if (!str.Contains(varName))
+                if (!str.Contains(varName) && _getVariableStringGenerated.All(g => g != varName))
                 {
                     break;
                 }
             }
+
+            _getVariableStringGenerated.Add(varName);
 
             return varName;
         }
@@ -139,7 +150,7 @@ namespace SharpLoader.Core
                 {
                     if (str[i] == ';')
                     {
-                        resultSb.Append('\u0000');
+                        resultSb.Append('\0');
                         continue;
                     }
                     if (str[i] == '<')
@@ -234,16 +245,14 @@ namespace SharpLoader.Core
                 // Indexes:
                 // 0 - string trash
                 // 1 - value trash
-                var trashChances = new[] { 1, 3 };
+                // 2 - object trash
+                var trashChances = new[] { 25, 60, 15 };
                 var allTrashChance = trashChances.Sum();
 
                 // Add all before values
                 for (var j = 1; j < trashChances.Length; j++)
                 {
-                    for (var k = 0; k < j; k++)
-                    {
-                        trashChances[j] += trashChances[k];
-                    }
+                    trashChances[j] += trashChances[j - 1];
                 }
 
                 // Add trash
@@ -259,7 +268,7 @@ namespace SharpLoader.Core
                         var varValue = GetRandomString(_rnd.Next(8, 32 + 1));
                         string operation;
 
-                        switch (_rnd.Next(0, 3))
+                        switch (_rnd.Next(0, 6))
                         {
                             case 0:
                             {
@@ -274,6 +283,21 @@ namespace SharpLoader.Core
                             case 2:
                             {
                                 operation = "ToUpper()";
+                                break;
+                            }
+                            case 3:
+                            {
+                                operation = "ToLowerInvariant()";
+                                break;
+                            }
+                            case 4:
+                            {
+                                operation = "ToUpperInvariant()";
+                                break;
+                            }
+                            case 5:
+                            {
+                                operation = "ToCharArray()";
                                 break;
                             }
                             default:
@@ -323,7 +347,50 @@ namespace SharpLoader.Core
                             }
                         }
 
-                        trash += $"{varType} {varName}={varValue}\u0000{varName}{operation}={varChange};";
+                        trash += $"{varType} {varName}={varValue}\0{varName}{operation}={varChange};";
+                    }
+                    else if (rndValue < trashChances[trashChancesIndex++])
+                    {
+                        // object trash
+                        var operation = _rnd.Next(0, 2) == 0 ? "GetHashCode()" : "GetTypeCode()";
+
+                        switch (_rnd.Next(0, 6))
+                        {
+                            case 0:
+                                {
+                                    trash += $"new byte().{operation};";
+                                    break;
+                                }
+                            case 1:
+                                {
+                                    trash += $"new bool().{operation};";
+                                    break;
+                                }
+                            case 2:
+                                {
+                                    trash += $"new char().{operation};";
+                                    break;
+                                }
+                            case 3:
+                                {
+                                    trash += $"new short().{operation};";
+                                    break;
+                                }
+                            case 4:
+                                {
+                                    trash += $"new int().{operation};";
+                                    break;
+                                }
+                            case 5:
+                                {
+                                    trash += $"new long().{operation};";
+                                    break;
+                                }
+                            default:
+                                {
+                                    throw new Exception("invalid switch value");
+                                }
+                        }
                     }
                 }
 
@@ -379,17 +446,7 @@ namespace SharpLoader.Core
 
                 // Generate variable names
                 var switchVarName = GetVariableName(str);
-                string exitLoopVarName;
-
-                while (true)
-                {
-                    exitLoopVarName = GetVariableName(str);
-
-                    if (exitLoopVarName != switchVarName)
-                    {
-                        break;
-                    }
-                }
+                var exitLoopVarName = GetVariableName(str);
 
                 var cases = new string[switchValues.Length];
 
@@ -399,18 +456,18 @@ namespace SharpLoader.Core
                     // Last
                     if (i + 1 == cases.Length)
                     {
-                        cases[i] = $"case {switchValues[i]}:{{{blocks[i]}{exitLoopVarName}=false\u0000break\u0000}}";
+                        cases[i] = $"case {switchValues[i]}:{{{blocks[i]}{exitLoopVarName}=false\0break\0}}";
                     }
                     // Not last
                     else
                     {
-                        cases[i] = $"case {switchValues[i]}:{{{blocks[i]}{switchVarName}={switchValues[i + 1]}\u0000break\u0000}}<block>";
+                        cases[i] = $"case {switchValues[i]}:{{{blocks[i]}{switchVarName}={switchValues[i + 1]}\0break\0}}<block>";
                     }
                 }
 
                 // Generate output
                 var caseOutput = cases.Aggregate(string.Empty, (current, c) => current + c);
-                var output = $"int {switchVarName}={switchValues[0]}\u0000bool {exitLoopVarName}=true\u0000while({exitLoopVarName}){{switch({switchVarName}){{<swap>{caseOutput}<swap/>}}}}";
+                var output = $"<swap>int {switchVarName}={switchValues[0]};bool {exitLoopVarName}=true;<swap/>while({exitLoopVarName}){{switch({switchVarName}){{<swap>{caseOutput}<swap/>}}}}";
 
                 // Remove old
                 str = str.Remove(tagIndex, tagLength + endTagIndex + endTagLength);
@@ -492,7 +549,7 @@ namespace SharpLoader.Core
                     insideString = !insideString;
                 }
 
-                if (str[i] == '\u0000')
+                if (str[i] == '\0')
                 {
                     str = str.Remove(i, 1).Insert(i, ";");
                 }
