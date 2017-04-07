@@ -357,39 +357,39 @@ namespace SharpLoader.Core
                         switch (_rnd.Next(0, 6))
                         {
                             case 0:
-                                {
-                                    trash += $"new byte().{operation};";
-                                    break;
-                                }
+                            {
+                                trash += $"new byte().{operation};";
+                                break;
+                            }
                             case 1:
-                                {
-                                    trash += $"new bool().{operation};";
-                                    break;
-                                }
+                            {
+                                trash += $"new bool().{operation};";
+                                break;
+                            }
                             case 2:
-                                {
-                                    trash += $"new char().{operation};";
-                                    break;
-                                }
+                            {
+                                trash += $"new char().{operation};";
+                                break;
+                            }
                             case 3:
-                                {
-                                    trash += $"new short().{operation};";
-                                    break;
-                                }
+                            {
+                                trash += $"new short().{operation};";
+                                break;
+                            }
                             case 4:
-                                {
-                                    trash += $"new int().{operation};";
-                                    break;
-                                }
+                            {
+                                trash += $"new int().{operation};";
+                                break;
+                            }
                             case 5:
-                                {
-                                    trash += $"new long().{operation};";
-                                    break;
-                                }
+                            {
+                                trash += $"new long().{operation};";
+                                break;
+                            }
                             default:
-                                {
-                                    throw new Exception("invalid switch value");
-                                }
+                            {
+                                throw new Exception("invalid switch value");
+                            }
                         }
                     }
                 }
