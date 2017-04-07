@@ -82,7 +82,7 @@ namespace SharpLoader
                 WinApi.WritePrivateProfileString("SharpLoader", "Assemblies", "", DataPath);
                 WinApi.WritePrivateProfileString("SharpLoader", "Sources", "", DataPath);
                 WinApi.WritePrivateProfileString("SharpLoader", "Output", "SharpLoader", DataPath);
-                WinApi.WritePrivateProfileString("SharpLoader", "AutoRun", false.ToString(), DataPath);
+                WinApi.WritePrivateProfileString("SharpLoader", "AutoRun", "false", DataPath);
                 WinApi.WritePrivateProfileString("SharpLoader", "Arguments", "/platform:anycpu32bitpreferred", DataPath);
 
                 Console.ForegroundColor = ConsoleColor.Red;
@@ -111,7 +111,7 @@ namespace SharpLoader
             var assemblies        = assembliesReadSb.ToString().Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
             var sourceFiles       = sourceFilesReadSb.ToString().Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
             var outputName        = $"{outputNameReadSb}-{DateTime.Now:dd-MM-yyyy}.exe";
-            var autoRun           = autoRunReadSb.ToString() == "true";
+            var autoRun           = autoRunReadSb.ToString().Equals("true", StringComparison.OrdinalIgnoreCase);
             var compilerArguments = compilerArgumentsReadSb.ToString();
 
             // Check values
