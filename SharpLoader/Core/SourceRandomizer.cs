@@ -21,6 +21,7 @@ namespace SharpLoader.Core
             Encode(ref source);
             Replace(ref source);
             Random(ref source);
+            RandomS(ref source);
             Trash(ref source);
             Flow(ref source);
             Swap(ref source);
@@ -252,6 +253,81 @@ namespace SharpLoader.Core
 
                 // Replace
                 str = str.Remove(tagIndex, tagLength + 1).Insert(tagIndex, outputValue.ToString());
+            }
+        }
+
+        private void RandomS(ref string str)
+        {
+            while (true)
+            {
+                // Check for tag
+                var tagIndex = str.IndexOf("<rnds", StringComparison.Ordinal);
+                if (tagIndex == -1)
+                {
+                    break;
+                }
+
+                // Check for close tag
+                var tagLength = str.Substring(tagIndex).IndexOf(">", StringComparison.Ordinal);
+                if (tagLength == -1)
+                {
+                    throw new Exception("close tag not found");
+                }
+
+                string output;
+
+                // Are arguments given?
+                if (tagLength > 6)
+                {
+                    // Substring arguments
+                    var argStr = str.Substring(tagIndex + 6, tagLength - 6);
+
+                    // Multiple arguments
+                    if (argStr.IndexOf(' ') != -1)
+                    {
+                        var argsStr = argStr.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                        if (argsStr.Length != 2)
+                        {
+                            throw new Exception($"invalid argument count: {argsStr.Length}");
+                        }
+
+                        // Parse
+                        var args = new int[argsStr.Length];
+                        for (var i = 0; i < argsStr.Length; i++)
+                        {
+                            if (!int.TryParse(argsStr[i], out args[i]))
+                            {
+                                throw new Exception($"invalid argument value: {argsStr[i]}");
+                            }
+                        }
+
+                        // Check values
+                        if (args[0] > args[1] + 1)
+                        {
+                            throw new Exception($"invalid argument value: {args[0]} <= {args[1] + 1}");
+                        }
+
+                        output = GetRandomString(_rnd.Next(args[0], args[1] + 1));
+                    }
+                    // Single argument
+                    else
+                    {
+                        if (!int.TryParse(argStr, out int arg))
+                        {
+                            throw new Exception($"invalid argument value: {argStr}");
+                        }
+
+                        output = GetRandomString(_rnd.Next(1, arg + 1));
+                    }
+                }
+                // No arguments
+                else
+                {
+                    output = GetRandomString(_rnd.Next(8, 16 + 1));
+                }
+
+                // Replace
+                str = str.Remove(tagIndex, tagLength + 1).Insert(tagIndex, output);
             }
         }
 
