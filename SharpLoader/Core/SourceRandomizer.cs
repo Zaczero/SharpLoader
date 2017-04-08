@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Text;
@@ -921,7 +922,8 @@ namespace SharpLoader.Core
 
                 // Generate output
                 var caseOutput = cases.Aggregate(string.Empty, (current, c) => current + c);
-                var output = $"<swap>int {switchVarName}={switchValues[0]};bool {exitLoopVarName}=true;<swap/>while({exitLoopVarName}){{switch({switchVarName}){{<swap>{caseOutput}<swap/>}}}}";
+                var innerOutput = cases.Length < 2 ? caseOutput : $"<swap>{caseOutput}<swap/>";
+                var output = $"<swap>int {switchVarName}={switchValues[0]};bool {exitLoopVarName}=true;<swap/>while({exitLoopVarName}){{switch({switchVarName}){{{innerOutput}}}}}";
 
                 // Replace
                 str = str.Remove(tagIndex, tagLength + endTagIndex + endTagLength).Insert(tagIndex, output);

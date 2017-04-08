@@ -1,5 +1,6 @@
 ﻿using System;
 using System.CodeDom.Compiler;
+using System.Diagnostics;
 using Microsoft.CSharp;
 
 namespace SharpLoader.Core
@@ -38,6 +39,7 @@ namespace SharpLoader.Core
                     Console.WriteLine(error);
                 }
 
+                Debug.Fail(string.Empty);
                 Console.ReadKey();
 
                 Environment.Exit(4);
