@@ -135,12 +135,12 @@ int a = <rnds 100 200>;
 ```
 
 #### 7. Encrypt
-Encrpypts int value.
+Encrpypts value.
 ```c#
 int a = <enc 58>;
 ```
 ```c#
-string a = <encs "Hello World">;
+string a = <enc "Hello World">;
 ```
 
 #### 8. Proxy
