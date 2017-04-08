@@ -130,21 +130,21 @@ namespace SharpLoader
             Console.ForegroundColor = ConsoleColor.White;
             Console.WriteLine("-=: Reading...");
 
-            var directoryReadSb         = new StringBuilder(ReadBufferSize);
+            var baseDirectoryReadSb     = new StringBuilder(ReadBufferSize);
             var assembliesReadSb        = new StringBuilder(ReadBufferSize);
             var sourceFilesReadSb       = new StringBuilder(ReadBufferSize);
             var outputNameReadSb        = new StringBuilder(ReadBufferSize);
             var autoRunReadSb           = new StringBuilder(ReadBufferSize);
             var compilerArgumentsReadSb = new StringBuilder(ReadBufferSize);
 
-            WinApi.GetPrivateProfileString("SharpLoader", "Directory", string.Empty, directoryReadSb, ReadBufferSize, ConfigPath);
+            WinApi.GetPrivateProfileString("SharpLoader", "Directory", string.Empty, baseDirectoryReadSb, ReadBufferSize, ConfigPath);
             WinApi.GetPrivateProfileString("SharpLoader", "Assemblies", string.Empty, assembliesReadSb, ReadBufferSize, ConfigPath);
             WinApi.GetPrivateProfileString("SharpLoader", "Sources", string.Empty, sourceFilesReadSb, ReadBufferSize, ConfigPath);
             WinApi.GetPrivateProfileString("SharpLoader", "Output", string.Empty, outputNameReadSb, ReadBufferSize, ConfigPath);
             WinApi.GetPrivateProfileString("SharpLoader", "AutoRun", string.Empty, autoRunReadSb, ReadBufferSize, ConfigPath);
             WinApi.GetPrivateProfileString("SharpLoader", "Arguments", string.Empty, compilerArgumentsReadSb, ReadBufferSize, ConfigPath);
 
-            var directory         = directoryReadSb.ToString();
+            var baseDirectory     = baseDirectoryReadSb.ToString();
             var assemblies        = assembliesReadSb.ToString().Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
             string[] sourceFiles;
             var outputName        = $"{outputNameReadSb}-{DateTime.Now:dd-MM-yyyy}.exe";
@@ -194,13 +194,13 @@ namespace SharpLoader
             }
 
             // Read sources
-            var sources = new string[sourceFiles.Length];
-            for (var i = 0; i < sources.Length; i++)
+            var userSources = new string[sourceFiles.Length];
+            for (var i = 0; i < userSources.Length; i++)
             {
                 // Add directory to source files paths
-                if (!string.IsNullOrWhiteSpace(directory))
+                if (!string.IsNullOrWhiteSpace(baseDirectory))
                 {
-                    sourceFiles[i] = Path.Combine(directory, sourceFiles[i]);
+                    sourceFiles[i] = Path.Combine(baseDirectory, sourceFiles[i]);
                 }
 
                 if (!File.Exists(sourceFiles[i]))
@@ -213,21 +213,38 @@ namespace SharpLoader
                     Environment.Exit(5);
                 }
 
-                sources[i] = File.ReadAllText(sourceFiles[i]);
+                userSources[i] = File.ReadAllText(sourceFiles[i]);
             }
 
             Console.ForegroundColor = ConsoleColor.White;
             Console.WriteLine("-=: Randomizing...");
 
-            for (var i = 0; i < sources.Length; i++)
+            for (var i = 0; i < userSources.Length; i++)
             {
-                randomizer.Randomize(ref sources[i]);
+                randomizer.Randomize(ref userSources[i]);
+            }
+            for (var i = 0; i < randomizer.Inject.Count; i++)
+            {
+                var tmp = randomizer.Inject[i];
+                randomizer.Randomize(ref tmp);
+                randomizer.Inject[i] = tmp;
+            }
+
+            // Inject SharpLoader code
+            var compileSources = new string[userSources.Length + randomizer.Inject.Count];
+            for (var i = 0; i < userSources.Length; i++)
+            {
+                compileSources[i] = userSources[i];
+            }
+            for (var i = userSources.Length; i < compileSources.Length; i++)
+            {
+                compileSources[i] = randomizer.Inject[i - userSources.Length];
             }
 
             Console.ForegroundColor = ConsoleColor.White;
             Console.WriteLine("-=: Compiling...");
 
-            compiler.Compile(outputName, compilerArguments, assemblies, sources);
+            compiler.Compile(outputName, compilerArguments, assemblies, compileSources);
 
             if (autoRun && File.Exists(outputName))
             {
