@@ -116,19 +116,19 @@ Generates random int value from X to Y.
 ```c#
 int a = <rnd 100 200>;
 ```
-#### 6. RandomS
+#### 6. Random String
 Generates random string with 8-16 length.  
 ```c#
 string a = <rnds>;
 ```
 
-#### 6.1. RandomS +1 argument
+#### 6.1. Random String +1 argument
 Generates random string with 1-X length.  
 ```c#
 string a = <rnds 25>;
 ```
 
-#### 6.2. RandomS +2 arguments
+#### 6.2. Random String +2 arguments
 Generates random string with X-Y length.  
 ```c#
 string a = <rnds 100 200>;
