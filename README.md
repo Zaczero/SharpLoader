@@ -139,14 +139,11 @@ Encrpypts int value.
 ```c#
 int a = <enc 58>;
 ```
-
-#### 8. EncryptS
-Encrpypts string value.
 ```c#
 string a = <encs "Hello World">;
 ```
 
-#### 9. Proxy
+#### 8. Proxy
 Generates proxy functions.
 ```c#
 //-<proxy>
