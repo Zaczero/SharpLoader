@@ -32,8 +32,7 @@ int c = 0;
 
 ### Features:
 
-#### 1. Swap lines
-Swaps the lines.
+#### 1. Swap
 ```c#
 //-<swap>
 int a = 0;
@@ -41,9 +40,6 @@ int b = 0;
 int c = 0;
 //-<swap/>
 ```
-
-#### 2. Swap blocks
-Swaps the blocks.
 ```c#
 //-<swap>
 if (a == 0)
@@ -54,7 +50,7 @@ if (b == 0)
 //-<swap/>
 ```
 
-#### 3. Trash
+#### 2. Trash
 Adds from 1 to 6 lines of trash.  
 ```c#
 int a = 0;
@@ -62,7 +58,7 @@ int a = 0;
 int b = 0;
 ```
 
-#### 4. Trash +1 argument
+#### 2.1. Trash +1 argument
 Adds from 1 to X lines of trash.  
 ```c#
 int a = 0;
@@ -70,7 +66,7 @@ int a = 0;
 int b = 0;
 ```
 
-#### 5. Trash +2 arguments
+#### 2.2. Trash +2 arguments
 Adds from X to Y lines of trash.  
 ```c#
 int a = 0;
@@ -78,8 +74,8 @@ int a = 0;
 int b = 0;
 ```
 
-#### 6. Flow lines
-Generates random switch-case from given lines.
+#### 3. Flow
+Generates random code flow.
 ```c#
 //-<flow>
 int a = 0;
@@ -87,9 +83,6 @@ int b = 0;
 int c = 0;
 //-<flow/>
 ```
-
-#### 7. Flow blocks
-Generates random switch-case from given blocks.
 ```c#
 //-<flow>
 if (a == 0)
@@ -100,28 +93,76 @@ if (b == 0)
 //-<flow/>
 ```
 
-#### 8. Seed
+#### 4. Seed
 Gets replaced with compilation seed value.
 ```c#
-string seed = <seed>.ToString();
+int seed = <seed>;
 ```
 
-#### 9. Random
+#### 5. Random
 Generates random int value.  
 ```c#
 int a = <rnd>;
 ```
 
-#### 10. Random +1 argument
+#### 5.1. Random +1 argument
 Generates random int value from 0 to X.  
 ```c#
 int a = <rnd 25>;
 ```
 
-#### 11. Random +2 arguments
+#### 5.2. Random +2 arguments
 Generates random int value from X to Y.  
 ```c#
 int a = <rnd 100 200>;
+```
+#### 6. RandomS
+Generates random string with 8-16 length.  
+```c#
+int a = <rnds>;
+```
+
+#### 6.1. RandomS +1 argument
+Generates random string with 1-X length.  
+```c#
+int a = <rnds 25>;
+```
+
+#### 6.2. RandomS +2 arguments
+Generates random string with X-Y length.  
+```c#
+int a = <rnds 100 200>;
+```
+
+#### 7. Encrypt
+Encrpypts int value.
+```c#
+int a = <enc 58>;
+```
+
+#### 8. EncryptS
+Encrpypts string value.
+```c#
+string a = <encs "Hello World">;
+```
+
+#### 9. Proxy
+Generates proxy functions.
+```c#
+//-<proxy>
+int a = 0;
+int b = 0;
+int c = 0;
+//-<proxy/>
+```
+```c#
+//-<proxy>
+if (a == 0)
+{ }
+//-<block>
+if (b == 0)
+{ }
+//-<proxy/>
 ```
 
 ## How to configure SharpLoader?
