@@ -30,7 +30,7 @@ int c = 0;
 
 *TIP: You can use &lt;tag&gt; or //-&lt;tag&gt; if you prefer comments*
 
-### Randomization features:
+### Features:
 
 #### 1. Swap lines
 Swaps the lines.
@@ -98,6 +98,30 @@ if (a == 0)
 if (b == 0)
 { }
 //-<flow/>
+```
+
+#### 8. Seed
+Gets replaced with compilation seed value.
+```c#
+string seed = <seed>.ToString();
+```
+
+#### 9. Random
+Generates random int value.  
+```c#
+int a = <rnd>;
+```
+
+#### 10. Random +1 argument
+Generates random int value from 0 to X.  
+```c#
+int a = <rnd 25>;
+```
+
+#### 11. Random +2 arguments
+Generates random int value from X to Y.  
+```c#
+int a = <rnd 100 200>;
 ```
 
 ## How to configure SharpLoader?
