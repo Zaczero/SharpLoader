@@ -8,15 +8,18 @@ namespace SharpLoader.Core
     public class SourceRandomizer
     {
         private readonly Random _rnd;
+        private readonly int _seed;
 
         public SourceRandomizer(int seed)
         {
             _rnd = new Random(seed);
+            _seed = seed;
         }
 
         public void Randomize(ref string source)
         {
             Encode(ref source);
+            Replace(ref source);
             Trash(ref source);
             Flow(ref source);
             Swap(ref source);
@@ -169,6 +172,11 @@ namespace SharpLoader.Core
             }
 
             str = resultSb.ToString();
+        }
+
+        private void Replace(ref string str)
+        {
+            str = str.Replace("<seed>", _seed.ToString());
         }
 
         private void Trash(ref string str)
