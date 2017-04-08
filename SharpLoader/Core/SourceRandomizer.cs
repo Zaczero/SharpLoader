@@ -20,6 +20,7 @@ namespace SharpLoader.Core
         {
             Encode(ref source);
             Replace(ref source);
+            Random(ref source);
             Trash(ref source);
             Flow(ref source);
             Swap(ref source);
@@ -179,6 +180,81 @@ namespace SharpLoader.Core
             str = str.Replace("<seed>", _seed.ToString());
         }
 
+        private void Random(ref string str)
+        {
+            while (true)
+            {
+                // Check for tag
+                var tagIndex = str.IndexOf("<rnd", StringComparison.Ordinal);
+                if (tagIndex == -1)
+                {
+                    break;
+                }
+
+                // Check for close tag
+                var tagLength = str.Substring(tagIndex).IndexOf(">", StringComparison.Ordinal);
+                if (tagLength == -1)
+                {
+                    throw new Exception("close tag not found");
+                }
+
+                int outputValue;
+
+                // Are arguments given?
+                if (tagLength > 5)
+                {
+                    // Substring arguments
+                    var argStr = str.Substring(tagIndex + 5, tagLength - 5);
+
+                    // Multiple arguments
+                    if (argStr.IndexOf(' ') != -1)
+                    {
+                        var argsStr = argStr.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                        if (argsStr.Length != 2)
+                        {
+                            throw new Exception($"invalid argument count: {argsStr.Length}");
+                        }
+
+                        // Parse
+                        var args = new int[argsStr.Length];
+                        for (var i = 0; i < argsStr.Length; i++)
+                        {
+                            if (!int.TryParse(argsStr[i], out args[i]))
+                            {
+                                throw new Exception($"invalid argument value: {argsStr[i]}");
+                            }
+                        }
+
+                        // Check values
+                        if (args[0] > args[1] + 1)
+                        {
+                            throw new Exception($"invalid argument value: {args[0]} <= {args[1] + 1}");
+                        }
+
+                        outputValue = _rnd.Next(args[0], args[1] + 1);
+                    }
+                    // Single argument
+                    else
+                    {
+                        if (!int.TryParse(argStr, out int arg))
+                        {
+                            throw new Exception($"invalid argument value: {argStr}");
+                        }
+
+                        outputValue = _rnd.Next(0, arg + 1);
+                    }
+                }
+                // No arguments
+                else
+                {
+                    outputValue = _rnd.Next(int.MinValue, int.MaxValue);
+                }
+
+                // Replace
+                str = str.Remove(tagIndex, tagLength + 1).Insert(tagIndex, outputValue.ToString());
+            }
+        }
+
         private void Trash(ref string str)
         {
             while (true)
@@ -190,14 +266,14 @@ namespace SharpLoader.Core
                     break;
                 }
 
-                int trashAmount;
-
                 // Check for close tag
                 var tagLength = str.Substring(tagIndex).IndexOf(">", StringComparison.Ordinal);
                 if (tagLength == -1)
                 {
                     throw new Exception("close tag not found");
                 }
+
+                int trashAmount;
 
                 // Are arguments given?
                 if (tagLength > 7)
@@ -235,8 +311,7 @@ namespace SharpLoader.Core
                     // Single argument
                     else
                     {
-                        int arg;
-                        if (!int.TryParse(argStr, out arg))
+                        if (!int.TryParse(argStr, out int arg))
                         {
                             throw new Exception($"invalid argument value: {argStr}");
                         }
@@ -502,11 +577,8 @@ namespace SharpLoader.Core
                 var caseOutput = cases.Aggregate(string.Empty, (current, c) => current + c);
                 var output = $"<swap>int {switchVarName}={switchValues[0]}\0{xorFunc}bool {exitLoopVarName}=true;<swap/>while({exitLoopVarName}){{switch({switchVarName}){{<swap>{caseOutput}<swap/>}}}}";
 
-                // Remove old
-                str = str.Remove(tagIndex, tagLength + endTagIndex + endTagLength);
-
-                // Insert new
-                str = str.Insert(tagIndex, output);
+                // Replace
+                str = str.Remove(tagIndex, tagLength + endTagIndex + endTagLength).Insert(tagIndex, output);
             }
         }
 
@@ -557,12 +629,10 @@ namespace SharpLoader.Core
                     swapped[swapIndex] = b;
                 }
 
-                // Remove old
-                str = str.Remove(tagIndex, tagLength + endTagIndex + endTagLength);
-
-                // Insert new
                 var output = swapped.Aggregate(string.Empty, (current, s) => current + s);
-                str = str.Insert(tagIndex, output);
+
+                // Replace
+                str = str.Remove(tagIndex, tagLength + endTagIndex + endTagLength).Insert(tagIndex, output);
             }
         }
 
