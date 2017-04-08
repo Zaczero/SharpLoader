@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 
@@ -27,7 +28,6 @@ namespace SharpLoader.Core
             RandomS(ref source);
             Random(ref source);
             Trash(ref source);
-            EncryptS(ref source);
             Encrypt(ref source);
             Proxy(ref source);
             Flow(ref source);
@@ -565,6 +565,8 @@ namespace SharpLoader.Core
             }
         }
 
+        private bool _stringDecryptorInjected;
+        private string _stringDecryptorFunction;
         private bool _valueDecryptorInjected;
         private string _valueDecryptorFunction;
         private void Encrypt(ref string str)
@@ -585,165 +587,165 @@ namespace SharpLoader.Core
                     throw new Exception("close tag not found");
                 }
 
-                // Inject decryptor
-                if (!_valueDecryptorInjected)
+                // Substring arguments
+                var arg = str.Substring(tagIndex + 5, tagLength - 5);
+
+                // String
+                if (arg.Contains('"'))
                 {
-                    var namespaceName = GetVariableName(str);
-                    var className = GetVariableName(str);
-                    var funcName = GetVariableName(str);
-
-                    var encryptedArgName = GetVariableName(str);
-                    var keyArgName = GetVariableName(str);
-                    var deltaArgName = GetVariableName(str);
-
-                    Inject.Add($"using System;" +
-                           $"namespace {namespaceName}" +
-                           $"{{" +
-                           $"public static class {className}" +
-                           $"{{" +
-                           $"public static int {funcName}(int {encryptedArgName}, int {keyArgName}, byte {deltaArgName})" +
-                           $"{{" +
-                           $"<flow>" +
-                           $"<trash>" +
-                           $"return {encryptedArgName} - {keyArgName} * {deltaArgName};" +
-                           $"<flow/>" +
-                           $"return 0;" +
-                           $"}}" +
-                           $"}}" +
-                           $"}}");
-
-                    _valueDecryptorInjected = true;
-                    _valueDecryptorFunction = $"{namespaceName}.{className}.{funcName}";
-                }
-
-                int rawValue;
-
-                // Are arguments given?
-                if (tagLength > 5)
-                {
-                    // Substring arguments
-                    if (!int.TryParse(str.Substring(tagIndex + 5, tagLength - 5), out rawValue))
+                    // Inject decryptor
+                    if (!_stringDecryptorInjected)
                     {
-                        throw new Exception($"invalid argument value: {str.Substring(tagIndex + 5, tagLength - 5)}");
+                        var namespaceName = GetVariableName(str);
+                        var className = GetVariableName(str);
+                        var funcName = GetVariableName(str);
+
+                        var encryptedArgName = GetVariableName(str);
+                        var keyArgName = GetVariableName(str);
+                        var deltaArgName = GetVariableName(str);
+
+                        var encrypted = GetVariableName(str);
+                        var decrypted = GetVariableName(str);
+                        var i = GetVariableName(str);
+
+                        Inject.Add($"using System;" +
+                               $"using System.Text;" +
+                               $"namespace {namespaceName}" +
+                               $"{{" +
+                               $"public static class {className}" +
+                               $"{{" +
+                               $"public static string {funcName}(string {encryptedArgName}, int {keyArgName}, byte {deltaArgName})" +
+                               $"{{" +
+                               $"byte[] {encrypted} = Convert.FromBase64String({encryptedArgName});" +
+                               $"<swap>" +
+                               $"byte[] {decrypted} = new byte[{encrypted}.Length];" +
+                               $"<trash>" +
+                               $"<swap/>" +
+                               $"for(int {i} = 0; {i} < {encrypted}.Length; {i}++)" +
+                               $"{{" +
+                               $"<flow>" +
+                               $"{decrypted}[{i}] = (byte)({encrypted}[{i}] - {keyArgName} * ({i} + {deltaArgName}));" +
+                               $"<trash>" +
+                               $"<flow/>" +
+                               $"}}" +
+                               $"<flow>" +
+                               $"<trash>" +
+                               $"return Encoding.Unicode.GetString({decrypted});" +
+                               $"<flow/>" +
+                               $"return string.Empty;" +
+                               $"}}" +
+                               $"}}" +
+                               $"}}");
+
+                        _stringDecryptorInjected = true;
+                        _stringDecryptorFunction = $"{namespaceName}.{className}.{funcName}";
                     }
+
+                    string rawString;
+
+                    // Are arguments given?
+                    if (tagLength > 6)
+                    {
+                        // Substring arguments
+                        rawString = str.Substring(tagIndex + 6, tagLength - 6).Trim('"');
+                    }
+                    // No arguments
+                    else
+                    {
+                        throw new Exception($"invalid argument value: null");
+                    }
+
+                    var key = _rnd.Next(int.MinValue, int.MaxValue);
+                    var delta = _rnd.Next(byte.MinValue, byte.MaxValue);
+
+                    var rawBytes = Encoding.Unicode.GetBytes(rawString);
+                    var encBytes = new byte[rawBytes.Length];
+
+                    for (var i = 0; i < rawBytes.Length; i++)
+                    {
+                        encBytes[i] = (byte)(rawBytes[i] + key * (i + delta));
+                    }
+
+                    var encString = Convert.ToBase64String(encBytes);
+
+                    var output = $"{_stringDecryptorFunction}(\"{encString}\",{key},{delta})";
+
+                    // Replace
+                    str = str.Remove(tagIndex, tagLength + 1).Insert(tagIndex, output);
                 }
-                // No arguments
+                // Value
                 else
                 {
-                    throw new Exception($"invalid argument value: null");
+                    // Inject decryptor
+                    if (!_valueDecryptorInjected)
+                    {
+                        var namespaceName = GetVariableName(str);
+                        var className = GetVariableName(str);
+                        var funcName = GetVariableName(str);
+
+                        var encryptedArgName = GetVariableName(str);
+                        var keyArgName = GetVariableName(str);
+                        var deltaArgName = GetVariableName(str);
+
+                        Inject.Add($"using System;" +
+                               $"namespace {namespaceName}" +
+                               $"{{" +
+                               $"public static class {className}" +
+                               $"{{" +
+                               $"public static int {funcName}(int {encryptedArgName}, int {keyArgName}, byte {deltaArgName})" +
+                               $"{{" +
+                               $"<flow>" +
+                               $"<trash>" +
+                               $"return {encryptedArgName} - {keyArgName} * {deltaArgName};" +
+                               $"<flow/>" +
+                               $"return 0;" +
+                               $"}}" +
+                               $"}}" +
+                               $"}}");
+
+                        _valueDecryptorInjected = true;
+                        _valueDecryptorFunction = $"{namespaceName}.{className}.{funcName}";
+                    }
+
+                    int rawValue;
+
+                    // Are arguments given?
+                    if (tagLength > 5)
+                    {
+                        // Hex
+                        if (arg.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
+                        {
+                            arg = arg.Remove(0, 2);
+                            if (!int.TryParse(arg, NumberStyles.HexNumber, null, out rawValue))
+                            {
+                                throw new Exception($"invalid argument value: {str.Substring(tagIndex + 5, tagLength - 5)}");
+                            }
+                        }
+                        // Dec
+                        else
+                        {
+                            if (!int.TryParse(arg, out rawValue))
+                            {
+                                throw new Exception($"invalid argument value: {str.Substring(tagIndex + 5, tagLength - 5)}");
+                            }
+                        }
+                    }
+                    // No arguments
+                    else
+                    {
+                        throw new Exception($"invalid argument value: null");
+                    }
+
+                    var key = _rnd.Next(int.MinValue, int.MaxValue);
+                    var delta = _rnd.Next(byte.MinValue, byte.MaxValue);
+
+                    var encValue = rawValue + key * delta;
+
+                    var output = $"{_valueDecryptorFunction}({encValue},{key},{delta})";
+
+                    // Replace
+                    str = str.Remove(tagIndex, tagLength + 1).Insert(tagIndex, output);
                 }
-
-                var key = _rnd.Next(int.MinValue, int.MaxValue);
-                var delta = _rnd.Next(byte.MinValue, byte.MaxValue);
-
-                var encValue = rawValue + key * delta;
-
-                var output = $"{_valueDecryptorFunction}({encValue},{key},{delta})";
-
-                // Replace
-                str = str.Remove(tagIndex, tagLength + 1).Insert(tagIndex, output);
-            }
-        }
-
-        private bool _stringDecryptorInjected;
-        private string _stringDecryptorFunction;
-        private void EncryptS(ref string str)
-        {
-            while (true)
-            {
-                // Check for tag
-                var tagIndex = str.IndexOf("<encs", StringComparison.Ordinal);
-                if (tagIndex == -1)
-                {
-                    break;
-                }
-
-                // Check for close tag
-                var tagLength = str.Substring(tagIndex).IndexOf(">", StringComparison.Ordinal);
-                if (tagLength == -1)
-                {
-                    throw new Exception("close tag not found");
-                }
-
-                // Inject decryptor
-                if (!_stringDecryptorInjected)
-                {
-                    var namespaceName = GetVariableName(str);
-                    var className = GetVariableName(str);
-                    var funcName = GetVariableName(str);
-
-                    var encryptedArgName = GetVariableName(str);
-                    var keyArgName = GetVariableName(str);
-                    var deltaArgName = GetVariableName(str);
-
-                    var encrypted = GetVariableName(str);
-                    var decrypted = GetVariableName(str);
-                    var i = GetVariableName(str);
-
-                    Inject.Add($"using System;" +
-                           $"using System.Text;" +
-                           $"namespace {namespaceName}" +
-                           $"{{" +
-                           $"public static class {className}" +
-                           $"{{" +
-                           $"public static string {funcName}(string {encryptedArgName}, int {keyArgName}, byte {deltaArgName})" +
-                           $"{{" +
-                           $"byte[] {encrypted} = Convert.FromBase64String({encryptedArgName});" +
-                           $"<swap>" +
-                           $"byte[] {decrypted} = new byte[{encrypted}.Length];" +
-                           $"<trash>" +
-                           $"<swap/>" +
-                           $"for(int {i} = 0; {i} < {encrypted}.Length; {i}++)" +
-                           $"{{" +
-                           $"<flow>" +
-                           $"{decrypted}[{i}] = (byte)({encrypted}[{i}] - {keyArgName} * ({i} + {deltaArgName}));" +
-                           $"<trash>" +
-                           $"<flow/>" +
-                           $"}}" +
-                           $"<flow>" +
-                           $"<trash>" +
-                           $"return Encoding.Unicode.GetString({decrypted});" +
-                           $"<flow/>" +
-                           $"return string.Empty;" +
-                           $"}}" +
-                           $"}}" +
-                           $"}}");
-
-                    _stringDecryptorInjected = true;
-                    _stringDecryptorFunction = $"{namespaceName}.{className}.{funcName}";
-                }
-
-                string rawString;
-
-                // Are arguments given?
-                if (tagLength > 6)
-                {
-                    // Substring arguments
-                    rawString = str.Substring(tagIndex + 6, tagLength - 6).Trim('"');
-                }
-                // No arguments
-                else
-                {
-                    throw new Exception($"invalid argument value: null");
-                }
-
-                var key = _rnd.Next(int.MinValue, int.MaxValue);
-                var delta = _rnd.Next(byte.MinValue, byte.MaxValue);
-
-                var rawBytes = Encoding.Unicode.GetBytes(rawString);
-                var encBytes = new byte[rawBytes.Length];
-
-                for (var i = 0; i < rawBytes.Length; i++)
-                {
-                    encBytes[i] = (byte)(rawBytes[i] + key * (i + delta));
-                }
-
-                var encString = Convert.ToBase64String(encBytes);
-
-                var output = $"{_stringDecryptorFunction}(\"{encString}\",{key},{delta})";
-
-                // Replace
-                str = str.Remove(tagIndex, tagLength + 1).Insert(tagIndex, output);
             }
         }
 
@@ -846,11 +848,8 @@ namespace SharpLoader.Core
                            $"{{" +
                            $"public static int {funcName}(int {leftArgName}, int {rightArgName})" +
                            $"{{" +
-                           $"<flow>" +
                            $"<trash>" +
                            $"return {leftArgName} ^ {rightArgName};" +
-                           $"<flow/>" +
-                           $"return 0;" +
                            $"}}" +
                            $"}}" +
                            $"}}");
