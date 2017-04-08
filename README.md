@@ -119,19 +119,19 @@ int a = <rnd 100 200>;
 #### 6. RandomS
 Generates random string with 8-16 length.  
 ```c#
-int a = <rnds>;
+string a = <rnds>;
 ```
 
 #### 6.1. RandomS +1 argument
 Generates random string with 1-X length.  
 ```c#
-int a = <rnds 25>;
+string a = <rnds 25>;
 ```
 
 #### 6.2. RandomS +2 arguments
 Generates random string with X-Y length.  
 ```c#
-int a = <rnds 100 200>;
+string a = <rnds 100 200>;
 ```
 
 #### 7. Encrypt
