@@ -141,6 +141,8 @@ Paths to all source files that your application use.
 Separated by ';' character.  
 `Sources=Program.cs;Utilities.cs;Enums\State.cs`
 
+*TIP: Alternatively you can drag'n'drop source files/directories*
+
 #### Output
 Compiled assembly name.  
 `Output=MyApplication`
