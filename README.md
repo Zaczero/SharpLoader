@@ -28,9 +28,12 @@ int c = 0;
 //-<swap/>
 ```
 
+*TIP: You can use &lt;tag&gt; or //-&lt;tag&gt; if you prefer comments*
+
 ### Randomization features:
 
-#### 1. Lines swap
+#### 1. Swap lines
+Swaps the lines.
 ```c#
 //-<swap>
 int a = 0;
@@ -39,7 +42,8 @@ int c = 0;
 //-<swap/>
 ```
 
-#### 2. Blocks swap
+#### 2. Swap blocks
+Swaps the blocks.
 ```c#
 //-<swap>
 if (a == 0)
@@ -51,7 +55,7 @@ if (b == 0)
 ```
 
 #### 3. Trash
-Adds from 3 to 8 lines of trash.  
+Adds from 1 to 6 lines of trash.  
 ```c#
 int a = 0;
 //-<trash>
@@ -59,7 +63,7 @@ int b = 0;
 ```
 
 #### 4. Trash +1 argument
-Adds X lines of trash.  
+Adds from 1 to X lines of trash.  
 ```c#
 int a = 0;
 //-<trash 5>
@@ -74,8 +78,34 @@ int a = 0;
 int b = 0;
 ```
 
+#### 6. Flow lines
+Generates random switch-case from given lines.
+```c#
+//-<flow>
+int a = 0;
+int b = 0;
+int c = 0;
+//-<flow/>
+```
+
+#### 7. Flow blocks
+Generates random switch-case from given blocks.
+```c#
+//-<flow>
+if (a == 0)
+{ }
+//-<block>
+if (b == 0)
+{ }
+//-<flow/>
+```
+
 ## How to configure SharpLoader?
 All SharpLoader's configuration is stored in SharpLoader.ini file.
+
+#### Directory
+Base directory for all source files.  
+`Directory=MyApplication`
 
 #### Assemblies
 All references that your application use (dlls).  
@@ -90,6 +120,10 @@ Separated by ';' character.
 #### Output
 Compiled assembly name.  
 `Output=MyApplication`
+
+#### AutoRun
+Should assembly be run after successful compilation.  
+`AutoRun=true`
 
 #### Arguments
 Compiler arguments (unsafe, prefer 32-bit etc.).  
