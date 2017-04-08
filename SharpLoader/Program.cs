@@ -43,7 +43,7 @@ namespace SharpLoader
 
         public static void Main(string[] args)
         {
-            Console.Title = $"-=: SharpLoader v{Version}";
+            Console.Title = $"SharpLoader";
 
             var dragDropSources = new List<string>();
             var seed = -1;
@@ -98,9 +98,12 @@ namespace SharpLoader
             var randomizer = new SourceRandomizer(seed);
             var compiler = new RuntimeCompiler();
 
-            Console.ForegroundColor = ConsoleColor.Magenta;
-            Console.WriteLine($"-=: SharpLoader v{Version} initialized");
-            Console.ForegroundColor = ConsoleColor.Cyan;
+            var primaryColorValue = new Random(Environment.TickCount).Next(10, 14 + 1);
+            var secondaryColorValue = primaryColorValue - 8;
+
+            Console.ForegroundColor = (ConsoleColor)primaryColorValue;
+            Console.WriteLine($"-=: SharpLoader v{Version}");
+            Console.ForegroundColor = (ConsoleColor)secondaryColorValue;
             Console.WriteLine($"-=: Created by {Author}");
             Console.ForegroundColor = ConsoleColor.DarkGray;
             Console.WriteLine($"-=: Seed : {seed}");
