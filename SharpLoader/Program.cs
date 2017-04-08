@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text;
 using SharpLoader.Core;
 
@@ -34,23 +36,54 @@ namespace SharpLoader
         private const int ReadBufferSize = 255;
 
         private const string ConfigFileName = "SharpLoader.ini";
-        private static readonly string ConfigPath = Path.Combine(Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName), ConfigFileName);
+        private static readonly string MyPath = Process.GetCurrentProcess().MainModule.FileName;
+        private static readonly string MyDirectory = Path.GetDirectoryName(MyPath);
+        private static readonly string ConfigPath = Path.Combine(MyDirectory, ConfigFileName);
 
         public static void Main(string[] args)
         {
             Console.Title = $"-=: SharpLoader v{Version}";
 
+            var dragDropSources = new List<string>();
             var seed = -1;
 
-            for (var i = 0; i < args.Length - 1; i++)
+            for (var i = 0; i < args.Length; i++)
             {
-                // Get seed from arguments
-                if (args[i] == "-seed")
+                // Argument is path
+                if (args[i] != MyPath && (File.Exists(args[i]) || Directory.Exists(args[i])))
                 {
-                    var result = int.TryParse(args[i + 1], out seed);
-                    if (!result)
+                    // Directory
+                    if (File.GetAttributes(args[i]).HasFlag(FileAttributes.Directory))
                     {
-                        throw new Exception($"invalid seed value: {args[i + 1]}");
+                        var files = GetFilesFromDirectory(args[i]);
+                        dragDropSources.AddRange(files);
+                    }
+                    // File
+                    else
+                    {
+                        dragDropSources.Add(args[i]);
+                    }
+                }
+                // Normal argument
+                else
+                {
+                    // Multiple arguments
+                    if (i + 1 < args.Length)
+                    {
+                        // Get seed from arguments
+                        if (args[i] == "-seed")
+                        {
+                            var result = int.TryParse(args[i + 1], out seed);
+                            if (!result)
+                            {
+                                throw new Exception($"invalid seed value: {args[i + 1]}");
+                            }
+                        }
+                    }
+                    // Single argument
+                    else
+                    {
+                        
                     }
                 }
             }
@@ -113,10 +146,21 @@ namespace SharpLoader
 
             var directory         = directoryReadSb.ToString();
             var assemblies        = assembliesReadSb.ToString().Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
-            var sourceFiles       = sourceFilesReadSb.ToString().Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
+            string[] sourceFiles;
             var outputName        = $"{outputNameReadSb}-{DateTime.Now:dd-MM-yyyy}.exe";
             var autoRun           = autoRunReadSb.ToString().Equals("true", StringComparison.OrdinalIgnoreCase);
             var compilerArguments = compilerArgumentsReadSb.ToString();
+
+            // Drag n Drop
+            if (dragDropSources.Count != 0)
+            {
+                sourceFiles = dragDropSources.ToArray();
+            }
+            // Read from config
+            else
+            {
+                sourceFiles = sourceFilesReadSb.ToString().Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
+            }
 
             // Check values
             if (assemblies.Length == 0)
@@ -196,6 +240,23 @@ namespace SharpLoader
             Console.ReadKey();
 
             Environment.Exit(0);
+        }
+
+        private static List<string> GetFilesFromDirectory(string directory)
+        {
+            var dir = new DirectoryInfo(directory);
+
+            var files = dir.GetFiles();
+            var subdirs = dir.GetDirectories();
+
+            var returnList = files.Select(file => file.FullName).ToList();
+
+            foreach (var subdir in subdirs)
+            {
+                returnList.AddRange(GetFilesFromDirectory(subdir.FullName));
+            }
+
+            return returnList;
         }
     }
 }
