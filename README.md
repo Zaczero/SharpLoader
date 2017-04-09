@@ -4,6 +4,8 @@
 SharpLoader is a program that opens source code files (c#), randomizes them and compiles to an .exe assembly.  
 This process reults a random file signature every time.
 
+![](http://image.prntscr.com/image/bf7ca945444f4426b56229b8cdea4e9c.jpeg)
+
 ### How to compile a SharpLoader project?
 If everything is set up properly (by developer) all that user has to do is run SharpLoader.exe and wait few seconds.
 
