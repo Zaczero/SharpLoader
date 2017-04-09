@@ -149,7 +149,7 @@ namespace SharpLoader
             WinApi.GetPrivateProfileString("SharpLoader", "Arguments", string.Empty, compilerArgumentsReadSb, ReadBufferSize, ConfigPath);
 
             var baseDirectory     = baseDirectoryReadSb.ToString();
-            var assemblies        = assembliesReadSb.ToString().Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
+            var userAssemblies        = assembliesReadSb.ToString().Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
             string[] sourceFiles;
             var outputName        = $"{outputNameReadSb}-{DateTime.Now:dd-MM-yyyy}.exe";
             var autoRun           = autoRunReadSb.ToString().Equals("true", StringComparison.OrdinalIgnoreCase);
@@ -167,7 +167,7 @@ namespace SharpLoader
             }
 
             // Check values
-            if (assemblies.Length == 0)
+            if (userAssemblies.Length == 0)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine($"-=: Assemblies are not given");
@@ -245,10 +245,24 @@ namespace SharpLoader
                 compileSources[i] = randomizer.Inject[i - userSources.Length];
             }
 
+            // Inject SharpLoader assemblies
+            var compileAssemblies = new List<string>();
+            for (var i = 0; i < userAssemblies.Length; i++)
+            {
+                compileAssemblies.Add(userAssemblies[i]);
+            }
+            for (var i = 0; i < randomizer.InjectAssemblies.Count; i++)
+            {
+                if (compileAssemblies.All(a => a != randomizer.InjectAssemblies[i]))
+                {
+                    compileAssemblies.Add(randomizer.InjectAssemblies[i]);
+                }
+            }
+
             Console.ForegroundColor = ConsoleColor.White;
             Console.WriteLine("-=: Compiling...");
 
-            compiler.Compile(outputName, compilerArguments, assemblies, compileSources);
+            compiler.Compile(outputName, compilerArguments, compileAssemblies.ToArray(), compileSources);
 
             if (autoRun && File.Exists(outputName))
             {
