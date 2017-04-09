@@ -140,6 +140,9 @@ Encrpypts value.
 int a = <enc 58>;
 ```
 ```c#
+char a = <enc 'C'>;
+```
+```c#
 string a = <enc "Hello World">;
 ```
 
