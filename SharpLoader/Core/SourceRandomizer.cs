@@ -83,7 +83,7 @@ namespace SharpLoader.Core
             var resultSb = new StringBuilder(str.Length);
 
             var insideComment = 0;
-            var insideString = false;
+            var insideString = 0;
 
             for (var i = 0; i < str.Length; i++)
             {
@@ -109,19 +109,19 @@ namespace SharpLoader.Core
                 }
 
                 // Check comments (outside)
-                if (!insideString && str[i] == '/' && str[i + 1] == '/' && str[i + 2] == '-')
+                if (insideString == 0 && str[i] == '/' && str[i + 1] == '/' && str[i + 2] == '-')
                 {
                     i++;
                     i++;
                     continue;
                 }
-                if (!insideString && str[i] == '/' && str[i + 1] == '/')
+                if (insideString == 0 && str[i] == '/' && str[i + 1] == '/')
                 {
                     i++;
                     insideComment = 1;
                     continue;
                 }
-                if (!insideString && str[i] == '/' && str[i + 1] == '*')
+                if (insideString == 0 && str[i] == '/' && str[i + 1] == '*')
                 {
                     i++;
                     insideComment = 2;
@@ -129,17 +129,34 @@ namespace SharpLoader.Core
                 }
 
                 // Check insideString
-                if (str[i] == '\"' && str[i - 1] != '\\')
+                if (insideString == 0)
                 {
-                    insideString = !insideString;
+                    if (str[i] == '\"' && str[i - 1] != '\\')
+                    {
+                        insideString = 1;
+                    }
+                    else if (str[i] == '\'' && str[i - 1] != '\\')
+                    {
+                        insideString = 2;
+                    }
                 }
-                else if (str[i] == '\'' && str[i - 1] != '\\')
+                else if (insideString == 1)
                 {
-                    insideString = !insideString;
+                    if (str[i] == '\"' && str[i - 1] != '\\')
+                    {
+                        insideString = 0;
+                    }
                 }
-
+                else if (insideString == 2)
+                {
+                    if (str[i] == '\'' && str[i - 1] != '\\')
+                    {
+                        insideString = 0;
+                    }
+                }
+                
                 // Encode non-strings
-                if (!insideString)
+                if (insideString == 0)
                 {
                     // Encode
                     if (str[i] == '\r' ||
@@ -609,34 +626,47 @@ namespace SharpLoader.Core
                         var decrypted = GetVariableName(str);
                         var i = GetVariableName(str);
 
+                        var c1ArgName = GetVariableName(str);
+                        var c2ArgName = GetVariableName(str);
+                        var c3ArgName = GetVariableName(str);
+                        var c4ArgName = GetVariableName(str);
+
                         Inject.Add($"using System;" +
-                               $"using System.Text;" +
-                               $"namespace {namespaceName}" +
-                               $"{{" +
-                               $"public static class {className}" +
-                               $"{{" +
-                               $"public static string {funcName}(string {encryptedArgName}, int {keyArgName}, byte {deltaArgName})" +
-                               $"{{" +
-                               $"byte[] {encrypted} = Convert.FromBase64String({encryptedArgName});" +
-                               $"<swap>" +
-                               $"byte[] {decrypted} = new byte[{encrypted}.Length];" +
-                               $"<trash>" +
-                               $"<swap/>" +
-                               $"for(int {i} = 0; {i} < {encrypted}.Length; {i}++)" +
-                               $"{{" +
-                               $"<flow>" +
-                               $"{decrypted}[{i}] = (byte)({encrypted}[{i}] - {keyArgName} * ({i} + {deltaArgName}));" +
-                               $"<trash>" +
-                               $"<flow/>" +
-                               $"}}" +
-                               $"<flow>" +
-                               $"<trash>" +
-                               $"return Encoding.Unicode.GetString({decrypted});" +
-                               $"<flow/>" +
-                               $"return string.Empty;" +
-                               $"}}" +
-                               $"}}" +
-                               $"}}");
+                                   $"using System.Text;" +
+                                   $"namespace {namespaceName}" +
+                                   $"{{" +
+                                   $"public static class {className}" +
+                                   $"{{" +
+                                   $"public static string {funcName}(string {encryptedArgName}, int {keyArgName}, byte {deltaArgName})" +
+                                   $"{{" +
+                                   $"byte[] {encrypted} = Convert.FromBase64String({encryptedArgName});" +
+                                   $"<swap>" +
+                                   $"byte[] {decrypted} = new byte[{encrypted}.Length];" +
+                                   $"int {c1ArgName} = 0;" +
+                                   $"int {c2ArgName} = 0;" +
+                                   $"int {c3ArgName} = 0;" +
+                                   $"int {c4ArgName} = 0;" +
+                                   $"<trash>" +
+                                   $"<swap/>" +
+                                   $"for(int {i} = 0; {i} < {encrypted}.Length; {i}++)" +
+                                   $"{{" +
+                                   $"<flow>" +
+                                   $"{c1ArgName} = {keyArgName} % {deltaArgName};" +
+                                   $"{c2ArgName} = {i} + {deltaArgName};" +
+                                   $"{c3ArgName} = {c1ArgName} * {c2ArgName};" +
+                                   $"{c4ArgName} = {c3ArgName} ^ {encrypted}[{i}];" +
+                                   $"{decrypted}[{i}] = (byte){c4ArgName};" +
+                                   $"<trash>" +
+                                   $"<flow/>" +
+                                   $"}}" +
+                                   $"<flow>" +
+                                   $"<trash>" +
+                                   $"return Encoding.Unicode.GetString({decrypted});" +
+                                   $"<flow/>" +
+                                   $"return string.Empty;" +
+                                   $"}}" +
+                                   $"}}" +
+                                   $"}}");
 
                         _stringDecryptorInjected = true;
                         _stringDecryptorFunction = $"{namespaceName}.{className}.{funcName}";
@@ -648,7 +678,7 @@ namespace SharpLoader.Core
                     if (tagLength > 6)
                     {
                         // Substring arguments
-                        rawString = str.Substring(tagIndex + 6, tagLength - 6).Trim('"');
+                        rawString = str.Substring(tagIndex + 5, tagLength - 5).Trim('"');
                     }
                     // No arguments
                     else
@@ -657,14 +687,14 @@ namespace SharpLoader.Core
                     }
 
                     var key = _rnd.Next(int.MinValue, int.MaxValue);
-                    var delta = _rnd.Next(byte.MinValue, byte.MaxValue);
+                    var delta = _rnd.Next(1, byte.MaxValue);
 
                     var rawBytes = Encoding.Unicode.GetBytes(rawString);
                     var encBytes = new byte[rawBytes.Length];
 
                     for (var i = 0; i < rawBytes.Length; i++)
                     {
-                        encBytes[i] = (byte)(rawBytes[i] + key * (i + delta));
+                        encBytes[i] = (byte)(key % delta * (i + delta) ^ rawBytes[i]);
                     }
 
                     var encString = Convert.ToBase64String(encBytes);
@@ -688,21 +718,34 @@ namespace SharpLoader.Core
                         var keyArgName = GetVariableName(str);
                         var deltaArgName = GetVariableName(str);
 
+                        var c1ArgName = GetVariableName(str);
+                        var c2ArgName = GetVariableName(str);
+                        var c3ArgName = GetVariableName(str);
+
                         Inject.Add($"using System;" +
-                               $"namespace {namespaceName}" +
-                               $"{{" +
-                               $"public static class {className}" +
-                               $"{{" +
-                               $"public static int {funcName}(int {encryptedArgName}, int {keyArgName}, byte {deltaArgName})" +
-                               $"{{" +
-                               $"<flow>" +
-                               $"<trash>" +
-                               $"return {encryptedArgName} - {keyArgName} * {deltaArgName};" +
-                               $"<flow/>" +
-                               $"return 0;" +
-                               $"}}" +
-                               $"}}" +
-                               $"}}");
+                                   $"namespace {namespaceName}" +
+                                   $"{{" +
+                                   $"public static class {className}" +
+                                   $"{{" +
+                                   $"public static int {funcName}(int {encryptedArgName}, int {keyArgName}, byte {deltaArgName})" +
+                                   $"{{" +
+                                   $"<swap>" +
+                                   $"int {c1ArgName} = 0;" +
+                                   $"int {c2ArgName} = 0;" +
+                                   $"int {c3ArgName} = 0;" +
+                                   $"<trash>" +
+                                   $"<swap/>" +
+                                   $"<flow>" +
+                                   $"{c1ArgName} = {keyArgName} % {deltaArgName};" +
+                                   $"{c2ArgName} = {c1ArgName} * {deltaArgName};" +
+                                   $"{c3ArgName} = {c2ArgName} ^ {encryptedArgName};" +
+                                   $"<trash>" +
+                                   $"return {c3ArgName};" +
+                                   $"<flow/>" +
+                                   $"return 0;" +
+                                   $"}}" +
+                                   $"}}" +
+                                   $"}}");
 
                         _valueDecryptorInjected = true;
                         _valueDecryptorFunction = $"{namespaceName}.{className}.{funcName}";
@@ -738,9 +781,9 @@ namespace SharpLoader.Core
                     }
 
                     var key = _rnd.Next(int.MinValue, int.MaxValue);
-                    var delta = _rnd.Next(byte.MinValue, byte.MaxValue);
+                    var delta = _rnd.Next(1, byte.MaxValue);
 
-                    var encValue = rawValue + key * delta;
+                    var encValue = key % delta * delta ^ rawValue;
 
                     var output = $"{_valueDecryptorFunction}({encValue},{key},{delta})";
 
@@ -755,16 +798,36 @@ namespace SharpLoader.Core
             while (true)
             {
                 // Check for tag
-                var tagIndex = str.IndexOf("<proxy>", StringComparison.Ordinal);
+                var tagIndex = str.IndexOf("<proxy", StringComparison.Ordinal);
                 if (tagIndex == -1)
                 {
                     break;
                 }
 
-                const int tagLength = 7;
+                // Check for close tag
+                var tagLength = str.Substring(tagIndex).IndexOf(">", StringComparison.Ordinal);
+                if (tagLength == -1)
+                {
+                    throw new Exception("close tag not found");
+                }
+
+                var argNamespace = string.Empty;
+
+                // Are arguments given?
+                if (tagLength > 7)
+                {
+                    // Substring arguments
+                    argNamespace = str.Substring(tagIndex + 7, tagLength - 7);
+                }
+                // No arguments
+                else
+                {
+
+                }
+
                 const int endTagLength = 8;
 
-                var afterStr = str.Substring(tagIndex + tagLength);
+                var afterStr = str.Substring(tagIndex + tagLength + 1);
 
                 // Check for close tag
                 var endTagIndex = afterStr.IndexOf("<proxy/>", StringComparison.Ordinal);
@@ -782,7 +845,7 @@ namespace SharpLoader.Core
 
                 for (var i = 0; i < blocks.Length; i++)
                 {
-                    var namespaceName = GetVariableName(str);
+                    var namespaceName = argNamespace == string.Empty ? GetVariableName(str) : argNamespace;
                     var className = GetVariableName(str);
                     var funcName = GetVariableName(str);
 
@@ -803,7 +866,7 @@ namespace SharpLoader.Core
                 var output = funcs.Aggregate(string.Empty, (current, func) => current + func);
 
                 // Replace
-                str = str.Remove(tagIndex, tagLength + endTagIndex + endTagLength).Insert(tagIndex, output);
+                str = str.Remove(tagIndex, tagLength + 1 + endTagIndex + endTagLength).Insert(tagIndex, output);
             }
         }
 
@@ -842,18 +905,23 @@ namespace SharpLoader.Core
                     var leftArgName = GetVariableName(str);
                     var rightArgName = GetVariableName(str);
 
+                    var calcVarName = GetVariableName(str);
+
                     Inject.Add($"using System;" +
-                           $"namespace {namespaceName}" +
-                           $"{{" +
-                           $"public static class {className}" +
-                           $"{{" +
-                           $"public static int {funcName}(int {leftArgName}, int {rightArgName})" +
-                           $"{{" +
-                           $"<trash>" +
-                           $"return {leftArgName} ^ {rightArgName};" +
-                           $"}}" +
-                           $"}}" +
-                           $"}}");
+                               $"namespace {namespaceName}" +
+                               $"{{" +
+                               $"public static class {className}" +
+                               $"{{" +
+                               $"public static int {funcName}(int {leftArgName}, int {rightArgName})" +
+                               $"{{" +
+                               $"<swap>" +
+                               $"int {calcVarName} = {leftArgName} ^ {rightArgName};" +
+                               $"<trash>" +
+                               $"<swap/>" +
+                               $"return {calcVarName};" +
+                               $"}}" +
+                               $"}}" +
+                               $"}}");
 
                     _xorDecryptorInjected = true;
                     _xorDecryptorFunction = $"{namespaceName}.{className}.{funcName}";
