@@ -162,6 +162,25 @@ if (b == 0)
 //-<proxy/>
 ```
 
+#### 8.1. Proxy +1 argument
+Generates proxy functions inside X namespace.
+```c#
+//-<proxy MyNamepsace>
+int a = 0;
+int b = 0;
+int c = 0;
+//-<proxy/>
+```
+```c#
+//-<proxy MyNamepsace>
+if (a == 0)
+{ }
+//-<block>
+if (b == 0)
+{ }
+//-<proxy/>
+```
+
 ## How to configure SharpLoader?
 All SharpLoader's configuration is stored in SharpLoader.ini file.
 
