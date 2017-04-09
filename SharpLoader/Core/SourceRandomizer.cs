@@ -8,19 +8,52 @@ namespace SharpLoader.Core
 {
     public class SourceRandomizer
     {
-        public readonly List<string> Inject;
-        public readonly List<string> InjectAssemblies;
+        public readonly List<string> InjectSources = new List<string>();
+        public readonly List<string> InjectAssemblies = new List<string>();
+
+        public readonly string InjectBytesNamespace;
+        public readonly string InjectBytesClass;
+        public readonly string InjectBytesProperty;
+        public readonly List<byte> InjectBytes = new List<byte>();
+
+        public readonly string InjectBoolsNamespace;
+        public readonly string InjectBoolsClass;
+        public readonly string InjectBoolsProperty;
+        public readonly List<bool> InjectBools = new List<bool>();
+
+        public readonly string InjectIntsNamespace;
+        public readonly string InjectIntsClass;
+        public readonly string InjectIntsProperty;
+        public readonly List<int> InjectInts = new List<int>();
+
+        public readonly string InjectStringsNamespace;
+        public readonly string InjectStringsClass;
+        public readonly string InjectStringsProperty;
+        public readonly List<string> InjectStrings = new List<string>();
 
         private readonly Random _rnd;
         private readonly int _seed;
 
         public SourceRandomizer(int seed)
         {
-            Inject = new List<string>();
-            InjectAssemblies = new List<string>();
-
             _rnd = new Random(seed);
             _seed = seed;
+
+            InjectBytesNamespace = GetRandomName();
+            InjectBytesClass = GetRandomName();
+            InjectBytesProperty = GetRandomName();
+
+            InjectBoolsNamespace = GetRandomName();
+            InjectBoolsClass = GetRandomName();
+            InjectBoolsProperty = GetRandomName();
+
+            InjectIntsNamespace = GetRandomName();
+            InjectIntsClass = GetRandomName();
+            InjectIntsProperty = GetRandomName();
+
+            InjectStringsNamespace = GetRandomName();
+            InjectStringsClass = GetRandomName();
+            InjectStringsProperty = GetRandomName();
         }
 
         public void Randomize(ref string source)
@@ -52,29 +85,21 @@ namespace SharpLoader.Core
             return rndStrSb.ToString();
         }
 
-        private string _getVariableStringLastStr;
-        private List<string> _getVariableStringGenerated;
-        private string GetVariableName(string str)
+        private readonly List<string> _namesGenerated = new List<string>();
+        private string GetRandomName()
         {
-            // New source file
-            if (_getVariableStringLastStr != str)
-            {
-                _getVariableStringLastStr = str;
-                _getVariableStringGenerated = new List<string>();
-            }
-
             string varName;
 
             while (true)
             {
                 varName = GetRandomString(_rnd.Next(8, 16 + 1));
-                if (!str.Contains(varName) && _getVariableStringGenerated.All(g => g != varName))
+                if (_namesGenerated.All(g => g != varName))
                 {
                     break;
                 }
             }
 
-            _getVariableStringGenerated.Add(varName);
+            _namesGenerated.Add(varName);
 
             return varName;
         }
@@ -278,7 +303,7 @@ namespace SharpLoader.Core
                 }
 
                 // Replace
-                str = str.Remove(tagIndex, tagLength + 1).Insert(tagIndex, InjectInt(str, outputValue));
+                str = str.Remove(tagIndex, tagLength + 1).Insert(tagIndex, Inject(outputValue));
             }
         }
 
@@ -353,7 +378,7 @@ namespace SharpLoader.Core
                 }
 
                 // Replace
-                str = str.Remove(tagIndex, tagLength + 1).Insert(tagIndex, InjectString(str, output));
+                str = str.Remove(tagIndex, tagLength + 1).Insert(tagIndex, Inject(output));
             }
         }
 
@@ -491,12 +516,12 @@ namespace SharpLoader.Core
                             }
                         }
 
-                        trash += $"{InjectString(str, varValue)}.{operation};";
+                        trash += $"{Inject(varValue)}.{operation};";
                     }
                     else if(rndValue < trashChances[trashChancesIndex++])
                     {
                         // value trash
-                        var varName = GetVariableName(str);
+                        var varName = GetRandomName();
                         var operation = _rnd.Next(0, 2) == 0 ? '+' : '-';
 
                         string varType;
@@ -532,7 +557,7 @@ namespace SharpLoader.Core
                             }
                         }
 
-                        trash += $"{varType} {varName}=({varType}){InjectInt(str, varValue)}\0{varName}{operation}=({varType}){InjectInt(str, varChange)};";
+                        trash += $"{varType} {varName}=({varType}){Inject(varValue)}\0{varName}{operation}=({varType}){Inject(varChange)};";
                     }
                     else if (rndValue < trashChances[trashChancesIndex++])
                     {
@@ -617,22 +642,22 @@ namespace SharpLoader.Core
                     // Inject decryptor
                     if (!_stringDecryptorInjected)
                     {
-                        var namespaceName = GetVariableName(str);
-                        var className = GetVariableName(str);
-                        var funcName = GetVariableName(str);
+                        var namespaceName = GetRandomName();
+                        var className = GetRandomName();
+                        var funcName = GetRandomName();
 
-                        var baseEncrypted = GetVariableName(str);
-                        var baseDecryptor = GetVariableName(str);
+                        var baseEncrypted = GetRandomName();
+                        var baseDecryptor = GetRandomName();
 
-                        var result = GetVariableName(str);
-                        var i = GetVariableName(str);
+                        var result = GetRandomName();
+                        var i = GetRandomName();
 
-                        var a = GetVariableName(str);
-                        var b = GetVariableName(str);
-                        var c = GetVariableName(str);
-                        var d = GetVariableName(str);
+                        var a = GetRandomName();
+                        var b = GetRandomName();
+                        var c = GetRandomName();
+                        var d = GetRandomName();
 
-                        Inject.Add($"using System;" +
+                        InjectSources.Add($"using System;" +
                                    $"using System.Text;" +
                                    $"namespace {namespaceName}" +
                                    $"{{" +
@@ -651,12 +676,12 @@ namespace SharpLoader.Core
                                    $"<trash>" +
                                    $"<swap/>" +
                                    $"<flow/>" +
-                                   $"for(int {i} = {InjectInt(str, 0)}; {i} < {baseEncrypted}.Length; {i}++)" +
+                                   $"for(int {i} = {Inject(0)}; {i} < {baseEncrypted}.Length; {i}++)" +
                                    $"{{" +
                                    $"<flow>" +
-                                   $"{a} = {baseDecryptor}[{InjectInt(str, 0)}] % {baseDecryptor}[{InjectInt(str, 1)}];" +
+                                   $"{a} = {baseDecryptor}[{Inject(0)}] % {baseDecryptor}[{Inject(1)}];" +
                                    $"<trash 4>" +
-                                   $"{b} = {i} + {baseDecryptor}[{InjectInt(str, 1)}];" +
+                                   $"{b} = {i} + {baseDecryptor}[{Inject(1)}];" +
                                    $"<trash 4>" +
                                    $"{c} = {a} * {b};" +
                                    $"<trash 4>" +
@@ -710,8 +735,8 @@ namespace SharpLoader.Core
 
                         var tmp2 = new[] { decryptorOne, decryptorTwo };
 
-                        var baseEncrypted = ByteArrayToString(str, tmp1);
-                        var baseDecryptor = ByteArrayToString(str, tmp2);
+                        var baseEncrypted = ByteArrayToString(tmp1);
+                        var baseDecryptor = ByteArrayToString(tmp2);
 
                         var output = $"{_stringDecryptorFunction}({baseEncrypted},{baseDecryptor})";
 
@@ -725,22 +750,22 @@ namespace SharpLoader.Core
                     // Inject decryptor
                     if (!_charDecryptorInjected)
                     {
-                        var namespaceName = GetVariableName(str);
-                        var className = GetVariableName(str);
-                        var funcName = GetVariableName(str);
+                        var namespaceName = GetRandomName();
+                        var className = GetRandomName();
+                        var funcName = GetRandomName();
 
-                        var baseEncrypted = GetVariableName(str);
-                        var baseDecryptor = GetVariableName(str);
+                        var baseEncrypted = GetRandomName();
+                        var baseDecryptor = GetRandomName();
 
-                        var result = GetVariableName(str);
-                        var i = GetVariableName(str);
+                        var result = GetRandomName();
+                        var i = GetRandomName();
 
-                        var a = GetVariableName(str);
-                        var b = GetVariableName(str);
-                        var c = GetVariableName(str);
-                        var d = GetVariableName(str);
+                        var a = GetRandomName();
+                        var b = GetRandomName();
+                        var c = GetRandomName();
+                        var d = GetRandomName();
 
-                        Inject.Add($"using System;" +
+                        InjectSources.Add($"using System;" +
                                    $"using System.Text;" +
                                    $"namespace {namespaceName}" +
                                    $"{{" +
@@ -759,12 +784,12 @@ namespace SharpLoader.Core
                                    $"<trash>" +
                                    $"<swap/>" +
                                    $"<flow/>" +
-                                   $"for(int {i} = {InjectInt(str, 0)}; {i} < {baseEncrypted}.Length; {i}++)" +
+                                   $"for(int {i} = {Inject(0)}; {i} < {baseEncrypted}.Length; {i}++)" +
                                    $"{{" +
                                    $"<flow>" +
-                                   $"{a} = {baseDecryptor}[{InjectInt(str, 0)}] % {baseDecryptor}[{InjectInt(str, 1)}];" +
+                                   $"{a} = {baseDecryptor}[{Inject(0)}] % {baseDecryptor}[{Inject(1)}];" +
                                    $"<trash 4>" +
-                                   $"{b} = {i} + {baseDecryptor}[{InjectInt(str, 1)}];" +
+                                   $"{b} = {i} + {baseDecryptor}[{Inject(1)}];" +
                                    $"<trash 4>" +
                                    $"{c} = {a} * {b};" +
                                    $"<trash 4>" +
@@ -818,8 +843,8 @@ namespace SharpLoader.Core
 
                         var tmp2 = new[] { decryptorOne, decryptorTwo };
 
-                        var baseEncrypted = ByteArrayToString(str, tmp1);
-                        var baseDecryptor = ByteArrayToString(str, tmp2);
+                        var baseEncrypted = ByteArrayToString(tmp1);
+                        var baseDecryptor = ByteArrayToString(tmp2);
 
                         var output = $"{_charDecryptorFunction}({baseEncrypted},{baseDecryptor})";
 
@@ -833,20 +858,20 @@ namespace SharpLoader.Core
                     // Inject decryptor
                     if (!_valueDecryptorInjected)
                     {
-                        var namespaceName = GetVariableName(str);
-                        var className = GetVariableName(str);
-                        var funcName = GetVariableName(str);
+                        var namespaceName = GetRandomName();
+                        var className = GetRandomName();
+                        var funcName = GetRandomName();
 
-                        var baseEncrypted = GetVariableName(str);
-                        var baseDecryptor = GetVariableName(str);
+                        var baseEncrypted = GetRandomName();
+                        var baseDecryptor = GetRandomName();
 
-                        var encrypted = GetVariableName(str);
+                        var encrypted = GetRandomName();
 
-                        var a = GetVariableName(str);
-                        var b = GetVariableName(str);
-                        var c = GetVariableName(str);
+                        var a = GetRandomName();
+                        var b = GetRandomName();
+                        var c = GetRandomName();
 
-                        Inject.Add($"using System;" +
+                        InjectSources.Add($"using System;" +
                                    $"namespace {namespaceName}" +
                                    $"{{" +
                                    $"public static class {className}" +
@@ -859,12 +884,12 @@ namespace SharpLoader.Core
                                    $"{{" +
                                    $"<flow>" +
                                    $"<swap>" +
-                                   $"{encrypted} = BitConverter.ToInt32({baseEncrypted}, {InjectInt(str, 0)});" +
+                                   $"{encrypted} = BitConverter.ToInt32({baseEncrypted}, {Inject(0)});" +
                                    $"<trash>" +
                                    $"<swap/>" +
-                                   $"{a} = {baseDecryptor}[{InjectInt(str, 0)}] % {baseDecryptor}[{InjectInt(str, 1)}];" +
+                                   $"{a} = {baseDecryptor}[{Inject(0)}] % {baseDecryptor}[{Inject(1)}];" +
                                    $"<trash 4>" +
-                                   $"{b} = {a} * {baseDecryptor}[{InjectInt(str, 1)}];" +
+                                   $"{b} = {a} * {baseDecryptor}[{Inject(1)}];" +
                                    $"<trash 4>" +
                                    $"{c} = {b} ^ {encrypted};" +
                                    $"<trash 4>" +
@@ -919,8 +944,8 @@ namespace SharpLoader.Core
                         var tmp1 = BitConverter.GetBytes(encrypted);
                         var tmp2 = new[] {decryptorOne, decryptorTwo};
 
-                        var baseEncrypted = ByteArrayToString(str, tmp1);
-                        var baseDecryptor = ByteArrayToString(str, tmp2);
+                        var baseEncrypted = ByteArrayToString(tmp1);
+                        var baseDecryptor = ByteArrayToString(tmp2);
 
                         var output = $"{_valueDecryptorFunction}({baseEncrypted}, {baseDecryptor})";
 
@@ -983,9 +1008,9 @@ namespace SharpLoader.Core
 
                 for (var i = 0; i < blocks.Length; i++)
                 {
-                    var namespaceName = argNamespace == string.Empty ? GetVariableName(str) : argNamespace;
-                    var className = GetVariableName(str);
-                    var funcName = GetVariableName(str);
+                    var namespaceName = argNamespace == string.Empty ? GetRandomName() : argNamespace;
+                    var className = GetRandomName();
+                    var funcName = GetRandomName();
 
                     str += $"namespace {namespaceName}" +
                            $"{{" +
@@ -1036,40 +1061,40 @@ namespace SharpLoader.Core
                 // Inject decryptor
                 if (!_xorDecryptorInjected)
                 {
-                    var namespaceName = GetVariableName(str);
-                    var className = GetVariableName(str);
-                    var funcName = GetVariableName(str);
+                    var namespaceName = GetRandomName();
+                    var className = GetRandomName();
+                    var funcName = GetRandomName();
 
-                    var baseDecryptor = GetVariableName(str);
+                    var baseDecryptor = GetRandomName();
 
-                    var tmp1 = GetVariableName(str);
-                    var tmp2 = GetVariableName(str);
+                    var tmp1 = GetRandomName();
+                    var tmp2 = GetRandomName();
 
-                    var decryptorOne = GetVariableName(str);
-                    var decryptorTwo = GetVariableName(str);
+                    var decryptorOne = GetRandomName();
+                    var decryptorTwo = GetRandomName();
 
-                    var result = GetVariableName(str);
+                    var result = GetRandomName();
 
-                    Inject.Add($"using System;" +
+                    InjectSources.Add($"using System;" +
                                $"namespace {namespaceName}" +
                                $"{{" +
                                $"public static class {className}" +
                                $"{{" +
-                               $"private static byte[] {tmp1} = new byte[{InjectInt(str, 4)}];" +
-                               $"private static byte[] {tmp2} = new byte[{InjectInt(str, 4)}];" +
+                               $"private static byte[] {tmp1} = new byte[{Inject(4)}];" +
+                               $"private static byte[] {tmp2} = new byte[{Inject(4)}];" +
                                $"private static int {decryptorOne};" +
                                $"private static int {decryptorTwo};" +
                                $"private static int {result};" +
                                $"public static int {funcName}(byte[] {baseDecryptor})" +
                                $"{{" +
                                $"<swap>" +
-                               $"Array.Copy({baseDecryptor}, {InjectInt(str, 0)}, {tmp1}, {InjectInt(str, 0)}, {InjectInt(str, 4)});" +
-                               $"Array.Copy({baseDecryptor}, {InjectInt(str, 4)}, {tmp2}, {InjectInt(str, 0)}, {InjectInt(str, 4)});" +
+                               $"Array.Copy({baseDecryptor}, {Inject(0)}, {tmp1}, {Inject(0)}, {Inject(4)});" +
+                               $"Array.Copy({baseDecryptor}, {Inject(4)}, {tmp2}, {Inject(0)}, {Inject(4)});" +
                                $"<trash>" +
                                $"<swap/>" +
                                $"<swap>" +
-                               $"{decryptorOne} = BitConverter.ToInt32({tmp1}, {InjectInt(str, 0)});" +
-                               $"{decryptorTwo} = BitConverter.ToInt32({tmp2}, {InjectInt(str, 0)});" +
+                               $"{decryptorOne} = BitConverter.ToInt32({tmp1}, {Inject(0)});" +
+                               $"{decryptorTwo} = BitConverter.ToInt32({tmp2}, {Inject(0)});" +
                                $"<trash>" +
                                $"<swap/>" +
                                $"<swap>" +
@@ -1129,8 +1154,8 @@ namespace SharpLoader.Core
                     }
 
                     // Generate variable names
-                    var switchName = GetVariableName(str);
-                    var doLoopName = GetVariableName(str);
+                    var switchName = GetRandomName();
+                    var doLoopName = GetRandomName();
 
                     var cases = new string[switchValues.Length];
 
@@ -1140,7 +1165,7 @@ namespace SharpLoader.Core
                         // Last
                         if (i + 1 == cases.Length)
                         {
-                            cases[i] = $"case {switchValues[i]}:{{{finalBlocks[i]}{doLoopName}={InjectBool(str, false)};break;}}";
+                            cases[i] = $"case {switchValues[i]}:{{{finalBlocks[i]}{doLoopName}={Inject(false)};break;}}";
                         }
                         // Not last
                         else
@@ -1150,7 +1175,7 @@ namespace SharpLoader.Core
                             var tmp1 = new byte[8];
                             Array.Copy(tmp2, 0, tmp1, 0, 4);
                             Array.Copy(tmp3, 0, tmp1, 4, 4);
-                            var baseDecryptor = ByteArrayToString(str, tmp1);
+                            var baseDecryptor = ByteArrayToString(tmp1);
 
                             cases[i] = $"case {switchValues[i]}:{{{finalBlocks[i]}{switchName}={_xorDecryptorFunction}({baseDecryptor});break;}}<block>";
                         }
@@ -1159,7 +1184,7 @@ namespace SharpLoader.Core
                     // Generate output
                     var caseOutput = cases.Aggregate(string.Empty, (current, c) => current + c);
                     var innerOutput = cases.Length < 2 ? caseOutput : $"<swap>{caseOutput}<swap/>";
-                    var output = $"<swap>int {switchName}={InjectInt(str, switchValues[0])};bool {doLoopName}={InjectBool(str, true)};<swap/>while({doLoopName}){{switch({switchName}){{{innerOutput}}}}}";
+                    var output = $"<swap>int {switchName}={Inject(switchValues[0])};bool {doLoopName}={Inject(true)};<swap/>while({doLoopName}){{switch({switchName}){{{innerOutput}}}}}";
 
                     // Replace
                     str = str.Remove(tagIndex, tagLength + endTagIndex + endTagLength).Insert(tagIndex, output);
@@ -1308,96 +1333,84 @@ namespace SharpLoader.Core
             return blocks;
         }
 
-        private string ByteArrayToString(string str, byte[] byteArray)
+        private string ByteArrayToString(byte[] byteArray)
         {
             var returnSb = new StringBuilder("new byte[] {");
             foreach (var b in byteArray)
             {
-                returnSb.Append(' ' + InjectByte(str, b) + ',');
+                returnSb.Append($"{Inject(b)},");
             }
             returnSb.Remove(returnSb.Length - 1, 1);
             returnSb.Append("}");
             return returnSb.ToString();
         }
 
-        private string InjectByte(string str, byte b)
+        private string Inject(byte val)
         {
-            //return b.ToString();
+            int index;
 
-            var namespaceName = GetVariableName(str);
-            var className = GetVariableName(str);
-            var propertyName = GetVariableName(str);
+            if (InjectBytes.Any(b => b == val))
+            {
+                index = InjectBytes.IndexOf(val);
+            }
+            else
+            {
+                InjectBytes.Add(val);
+                index = InjectBytes.Count - 1;
+            }
 
-            Inject.Add($"using System;" +
-                               $"namespace {namespaceName}" +
-                               $"{{" +
-                               $"public static class {className}" +
-                               $"{{" +
-                               $"public static byte {propertyName} = {b};" +
-                               $"}}" +
-                               $"}}");
-
-            return $"{namespaceName}.{className}.{propertyName}";
+            return $"{InjectBytesNamespace}.{InjectBytesClass}.{InjectBytesProperty}[{index}]";
         }
 
-        private string InjectBool(string str, bool b)
+        private string Inject(bool val)
         {
-            //return b.ToString().ToLower();
+            int index;
 
-            var namespaceName = GetVariableName(str);
-            var className = GetVariableName(str);
-            var propertyName = GetVariableName(str);
+            if (InjectBools.Any(b => b == val))
+            {
+                index = InjectBools.IndexOf(val);
+            }
+            else
+            {
+                InjectBools.Add(val);
+                index = InjectBools.Count - 1;
+            }
 
-            Inject.Add($"using System;" +
-                               $"namespace {namespaceName}" +
-                               $"{{" +
-                               $"public static class {className}" +
-                               $"{{" +
-                               $"public static bool {propertyName} = {b.ToString().ToLower()};" +
-                               $"}}" +
-                               $"}}");
-
-            return $"{namespaceName}.{className}.{propertyName}";
+            return $"{InjectBoolsNamespace}.{InjectBoolsClass}.{InjectBoolsProperty}[{index}]";
         }
 
-        private string InjectInt(string str, int b)
+        private string Inject(int val)
         {
-            //return b.ToString();
+            int index;
 
-            var namespaceName = GetVariableName(str);
-            var className = GetVariableName(str);
-            var propertyName = GetVariableName(str);
+            if (InjectInts.Any(b => b == val))
+            {
+                index = InjectInts.IndexOf(val);
+            }
+            else
+            {
+                InjectInts.Add(val);
+                index = InjectInts.Count - 1;
+            }
 
-            Inject.Add($"using System;" +
-                                $"namespace {namespaceName}" +
-                                $"{{" +
-                                $"public static class {className}" +
-                                $"{{" +
-                                $"public static int {propertyName} = {b};" +
-                                $"}}" +
-                                $"}}");
-
-            return $"{namespaceName}.{className}.{propertyName}";
+            return $"{InjectIntsNamespace}.{InjectIntsClass}.{InjectIntsProperty}[{index}]";
         }
 
-        private string InjectString(string str, string b)
+        private string Inject(string val)
         {
-            //return $"\"{b}\"";
+            int index;
 
-            var namespaceName = GetVariableName(str);
-            var className = GetVariableName(str);
-            var propertyName = GetVariableName(str);
+            if (InjectStrings.Any(b => b == val))
+            {
+                index = InjectStrings.IndexOf(val);
+            }
+            else
+            {
+                InjectStrings.Add(val);
+                index = InjectStrings.Count - 1;
+            }
 
-            Inject.Add($"using System;" +
-                                $"namespace {namespaceName}" +
-                                $"{{" +
-                                $"public static class {className}" +
-                                $"{{" +
-                                $"public static string {propertyName} = \"{b}\";" +
-                                $"}}" +
-                                $"}}");
-
-            return $"{namespaceName}.{className}.{propertyName}";
+            return $"{InjectStringsNamespace}.{InjectStringsClass}.{InjectStringsProperty}[{index}]";
         }
     }
 }

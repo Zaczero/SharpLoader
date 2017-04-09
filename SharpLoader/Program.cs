@@ -227,42 +227,111 @@ namespace SharpLoader
             {
                 randomizer.Randomize(ref userSources[i]);
             }
-            for (var i = 0; i < randomizer.Inject.Count; i++)
+            for (var i = 0; i < randomizer.InjectSources.Count; i++)
             {
-                var tmp = randomizer.Inject[i];
+                var tmp = randomizer.InjectSources[i];
                 randomizer.Randomize(ref tmp);
-                randomizer.Inject[i] = tmp;
+                randomizer.InjectSources[i] = tmp;
             }
 
-            // Inject SharpLoader code
-            var compileSources = new string[userSources.Length + randomizer.Inject.Count];
-            for (var i = 0; i < userSources.Length; i++)
-            {
-                compileSources[i] = userSources[i];
-            }
-            for (var i = userSources.Length; i < compileSources.Length; i++)
-            {
-                compileSources[i] = randomizer.Inject[i - userSources.Length];
-            }
+            // Inject sources
+            var compileSources = userSources.ToList();
+            compileSources.AddRange(randomizer.InjectSources);
 
-            // Inject SharpLoader assemblies
-            var compileAssemblies = new List<string>();
-            for (var i = 0; i < userAssemblies.Length; i++)
+            // Inject bytes
+            if(randomizer.InjectBytes.Count > 0)
             {
-                compileAssemblies.Add(userAssemblies[i]);
-            }
-            for (var i = 0; i < randomizer.InjectAssemblies.Count; i++)
-            {
-                if (compileAssemblies.All(a => a != randomizer.InjectAssemblies[i]))
+                var output = new StringBuilder("new byte[] {");
+                foreach (var b in randomizer.InjectBytes)
                 {
-                    compileAssemblies.Add(randomizer.InjectAssemblies[i]);
+                    output.Append($"{b},");
+                }
+                output.Remove(output.Length - 1, 1);
+                output.Append("}");
+
+                compileSources.Add($"namespace {randomizer.InjectBytesNamespace}" +
+                               $"{{" +
+                               $"public static class {randomizer.InjectBytesClass}" +
+                               $"{{" +
+                               $"public static byte[] {randomizer.InjectBytesProperty} = {output};" +
+                               $"}}" +
+                               $"}}");
+            }
+
+            // Inject bools
+            if (randomizer.InjectBools.Count > 0)
+            {
+                var output = new StringBuilder("new bool[] {");
+                foreach (var b in randomizer.InjectBools)
+                {
+                    output.Append($"{b.ToString().ToLower()},");
+                }
+                output.Remove(output.Length - 1, 1);
+                output.Append("}");
+
+                compileSources.Add($"namespace {randomizer.InjectBoolsNamespace}" +
+                               $"{{" +
+                               $"public static class {randomizer.InjectBoolsClass}" +
+                               $"{{" +
+                               $"public static bool[] {randomizer.InjectBoolsProperty} = {output};" +
+                               $"}}" +
+                               $"}}");
+            }
+
+            // Inject ints
+            if (randomizer.InjectInts.Count > 0)
+            {
+                var output = new StringBuilder("new int[] {");
+                foreach (var b in randomizer.InjectInts)
+                {
+                    output.Append($"{b},");
+                }
+                output.Remove(output.Length - 1, 1);
+                output.Append("}");
+
+                compileSources.Add($"namespace {randomizer.InjectIntsNamespace}" +
+                               $"{{" +
+                               $"public static class {randomizer.InjectIntsClass}" +
+                               $"{{" +
+                               $"public static int[] {randomizer.InjectIntsProperty} = {output};" +
+                               $"}}" +
+                               $"}}");
+            }
+
+            // Inject strings
+            if (randomizer.InjectStrings.Count > 0)
+            {
+                var output = new StringBuilder("new string[] {");
+                foreach (var b in randomizer.InjectStrings)
+                {
+                    output.Append($"\"{b}\",");
+                }
+                output.Remove(output.Length - 1, 1);
+                output.Append("}");
+
+                compileSources.Add($"namespace {randomizer.InjectStringsNamespace}" +
+                               $"{{" +
+                               $"public static class {randomizer.InjectStringsClass}" +
+                               $"{{" +
+                               $"public static string[] {randomizer.InjectStringsProperty} = {output};" +
+                               $"}}" +
+                               $"}}");
+            }
+
+            // Inject assemblies
+            var compileAssemblies = userAssemblies.ToList();
+            foreach (var t in randomizer.InjectAssemblies)
+            {
+                if (compileAssemblies.All(a => a != t))
+                {
+                    compileAssemblies.Add(t);
                 }
             }
 
             Console.ForegroundColor = ConsoleColor.White;
             Console.WriteLine("-=: Compiling...");
 
-            compiler.Compile(outputName, compilerArguments, compileAssemblies.ToArray(), compileSources);
+            compiler.Compile(outputName, compilerArguments, compileAssemblies.ToArray(), compileSources.ToArray());
 
             if (autoRun && File.Exists(outputName))
             {
