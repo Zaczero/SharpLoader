@@ -624,12 +624,6 @@ namespace SharpLoader.Core
                         var baseEncrypted = GetVariableName(str);
                         var baseDecryptor = GetVariableName(str);
 
-                        var tmp1 = GetVariableName(str);
-                        var tmp2 = GetVariableName(str);
-
-                        var decryptorOne = GetVariableName(str);
-                        var decryptorTwo = GetVariableName(str);
-
                         var result = GetVariableName(str);
                         var i = GetVariableName(str);
 
@@ -644,39 +638,32 @@ namespace SharpLoader.Core
                                    $"{{" +
                                    $"public static class {className}" +
                                    $"{{" +
-                                   $"private static byte[] {tmp1};" +
-                                   $"private static byte[] {tmp2};" +
                                    $"private static byte[] {result};" +
-                                   $"private static byte {decryptorOne};" +
-                                   $"private static byte {decryptorTwo};" +
                                    $"private static int {a};" +
                                    $"private static int {b};" +
                                    $"private static int {c};" +
                                    $"private static int {d};" +
-                                   $"public static string {funcName}(string {baseEncrypted}, short {baseDecryptor})" +
+                                   $"public static string {funcName}(byte[] {baseEncrypted}, byte[] {baseDecryptor})" +
                                    $"{{" +
                                    $"<flow>" +
                                    $"<swap>" +
-                                   $"{tmp1} = Convert.FromBase64String({baseEncrypted});" +
-                                   $"{tmp2} = BitConverter.GetBytes({baseDecryptor});" +
-                                   $"<trash>" +
-                                   $"<swap/>" +
-                                   $"<swap>" +
-                                   $"{result} = new byte[{tmp1}.Length];" +
-                                   $"{decryptorOne} = {tmp2}[0];" +
-                                   $"{decryptorTwo} = {tmp2}[1];" +
+                                   $"{result} = new byte[{baseEncrypted}.Length];" +
                                    $"<trash>" +
                                    $"<swap/>" +
                                    $"<flow/>" +
-                                   $"for(int {i} = 0; {i} < {tmp1}.Length; {i}++)" +
+                                   $"for(int {i} = 0; {i} < {baseEncrypted}.Length; {i}++)" +
                                    $"{{" +
                                    $"<flow>" +
-                                   $"{a} = {decryptorOne} % {decryptorTwo};" +
-                                   $"{b} = {i} + {decryptorTwo};" +
+                                   $"{a} = {baseDecryptor}[0] % {baseDecryptor}[1];" +
+                                   $"<trash 4>" +
+                                   $"{b} = {i} + {baseDecryptor}[1];" +
+                                   $"<trash 4>" +
                                    $"{c} = {a} * {b};" +
-                                   $"{d} = {c} ^ {tmp1}[{i}];" +
+                                   $"<trash 4>" +
+                                   $"{d} = {c} ^ {baseEncrypted}[{i}];" +
+                                   $"<trash 4>" +
                                    $"{result}[{i}] = (byte){d};" +
-                                   $"<trash>" +
+                                   $"<trash 4>" +
                                    $"<flow/>" +
                                    $"}}" +
                                    $"<flow>" +
@@ -723,10 +710,10 @@ namespace SharpLoader.Core
 
                         var tmp2 = new[] { decryptorOne, decryptorTwo };
 
-                        var baseEncrypted = Convert.ToBase64String(tmp1);
-                        var baseDecryptor = BitConverter.ToInt16(tmp2, 0);
+                        var baseEncrypted = ByteArrayToString(tmp1);
+                        var baseDecryptor = ByteArrayToString(tmp2);
 
-                        var output = $"{_stringDecryptorFunction}(\"{baseEncrypted}\",{baseDecryptor})";
+                        var output = $"{_stringDecryptorFunction}({baseEncrypted},{baseDecryptor})";
 
                         // Replace
                         str = str.Remove(tagIndex, tagLength + 1).Insert(tagIndex, output);
@@ -745,12 +732,6 @@ namespace SharpLoader.Core
                         var baseEncrypted = GetVariableName(str);
                         var baseDecryptor = GetVariableName(str);
 
-                        var tmp1 = GetVariableName(str);
-                        var tmp2 = GetVariableName(str);
-
-                        var decryptorOne = GetVariableName(str);
-                        var decryptorTwo = GetVariableName(str);
-
                         var result = GetVariableName(str);
                         var i = GetVariableName(str);
 
@@ -765,39 +746,32 @@ namespace SharpLoader.Core
                                    $"{{" +
                                    $"public static class {className}" +
                                    $"{{" +
-                                   $"private static byte[] {tmp1};" +
-                                   $"private static byte[] {tmp2};" +
                                    $"private static byte[] {result};" +
-                                   $"private static byte {decryptorOne};" +
-                                   $"private static byte {decryptorTwo};" +
                                    $"private static int {a};" +
                                    $"private static int {b};" +
                                    $"private static int {c};" +
                                    $"private static int {d};" +
-                                   $"public static char {funcName}(string {baseEncrypted}, short {baseDecryptor})" +
+                                   $"public static char {funcName}(byte[] {baseEncrypted}, byte[] {baseDecryptor})" +
                                    $"{{" +
                                    $"<flow>" +
                                    $"<swap>" +
-                                   $"{tmp1} = Convert.FromBase64String({baseEncrypted});" +
-                                   $"{tmp2} = BitConverter.GetBytes({baseDecryptor});" +
-                                   $"<trash>" +
-                                   $"<swap/>" +
-                                   $"<swap>" +
-                                   $"{result} = new byte[{tmp1}.Length];" +
-                                   $"{decryptorOne} = {tmp2}[0];" +
-                                   $"{decryptorTwo} = {tmp2}[1];" +
+                                   $"{result} = new byte[{baseEncrypted}.Length];" +
                                    $"<trash>" +
                                    $"<swap/>" +
                                    $"<flow/>" +
-                                   $"for(int {i} = 0; {i} < {tmp1}.Length; {i}++)" +
+                                   $"for(int {i} = 0; {i} < {baseEncrypted}.Length; {i}++)" +
                                    $"{{" +
                                    $"<flow>" +
-                                   $"{a} = {decryptorOne} % {decryptorTwo};" +
-                                   $"{b} = {i} + {decryptorTwo};" +
+                                   $"{a} = {baseDecryptor}[0] % {baseDecryptor}[1];" +
+                                   $"<trash 4>" +
+                                   $"{b} = {i} + {baseDecryptor}[1];" +
+                                   $"<trash 4>" +
                                    $"{c} = {a} * {b};" +
-                                   $"{d} = {c} ^ {tmp1}[{i}];" +
+                                   $"<trash 4>" +
+                                   $"{d} = {c} ^ {baseEncrypted}[{i}];" +
+                                   $"<trash 4>" +
                                    $"{result}[{i}] = (byte){d};" +
-                                   $"<trash>" +
+                                   $"<trash 4>" +
                                    $"<flow/>" +
                                    $"}}" +
                                    $"<flow>" +
@@ -844,10 +818,10 @@ namespace SharpLoader.Core
 
                         var tmp2 = new[] { decryptorOne, decryptorTwo };
 
-                        var baseEncrypted = Convert.ToBase64String(tmp1);
-                        var baseDecryptor = BitConverter.ToInt16(tmp2, 0);
+                        var baseEncrypted = ByteArrayToString(tmp1);
+                        var baseDecryptor = ByteArrayToString(tmp2);
 
-                        var output = $"{_charDecryptorFunction}(\"{baseEncrypted}\",{baseDecryptor})";
+                        var output = $"{_charDecryptorFunction}({baseEncrypted},{baseDecryptor})";
 
                         // Replace
                         str = str.Remove(tagIndex, tagLength + 1).Insert(tagIndex, output);
@@ -867,11 +841,6 @@ namespace SharpLoader.Core
                         var baseDecryptor = GetVariableName(str);
 
                         var encrypted = GetVariableName(str);
-                        var decryptorOne = GetVariableName(str);
-                        var decryptorTwo = GetVariableName(str);
-
-                        var tmp1 = GetVariableName(str);
-                        var tmp2 = GetVariableName(str);
 
                         var a = GetVariableName(str);
                         var b = GetVariableName(str);
@@ -882,32 +851,23 @@ namespace SharpLoader.Core
                                    $"{{" +
                                    $"public static class {className}" +
                                    $"{{" +
-                                   $"private static byte[] {tmp1};" +
-                                   $"private static byte[] {tmp2};" +
                                    $"private static int {encrypted};" +
-                                   $"private static byte {decryptorOne};" +
-                                   $"private static byte {decryptorTwo};" +
                                    $"private static int {a};" +
                                    $"private static int {b};" +
                                    $"private static int {c};" +
-                                   $"public static int {funcName}(string {baseEncrypted}, short {baseDecryptor})" +
+                                   $"public static int {funcName}(byte[] {baseEncrypted}, byte[] {baseDecryptor})" +
                                    $"{{" +
                                    $"<flow>" +
                                    $"<swap>" +
-                                   $"{tmp1} = Convert.FromBase64String({baseEncrypted});" +
-                                   $"{tmp2} = BitConverter.GetBytes({baseDecryptor});" +
+                                   $"{encrypted} = BitConverter.ToInt32({baseEncrypted}, 0);" +
                                    $"<trash>" +
                                    $"<swap/>" +
-                                   $"<swap>" +
-                                   $"{encrypted} = BitConverter.ToInt32({tmp1}, 0);" +
-                                   $"{decryptorOne} = {tmp2}[0];" +
-                                   $"{decryptorTwo} = {tmp2}[1];" +
-                                   $"<trash>" +
-                                   $"<swap/>" +
-                                   $"{a} = {decryptorOne} % {decryptorTwo};" +
-                                   $"{b} = {a} * {decryptorTwo};" +
+                                   $"{a} = {baseDecryptor}[0] % {baseDecryptor}[1];" +
+                                   $"<trash 4>" +
+                                   $"{b} = {a} * {baseDecryptor}[1];" +
+                                   $"<trash 4>" +
                                    $"{c} = {b} ^ {encrypted};" +
-                                   $"<trash>" +
+                                   $"<trash 4>" +
                                    $"return {c};" +
                                    $"<flow/>" +
                                    $"return 0;" +
@@ -959,10 +919,10 @@ namespace SharpLoader.Core
                         var tmp1 = BitConverter.GetBytes(encrypted);
                         var tmp2 = new[] {decryptorOne, decryptorTwo};
 
-                        var baseEncrypted = Convert.ToBase64String(tmp1);
-                        var baseDecryptor = BitConverter.ToInt16(tmp2, 0);
+                        var baseEncrypted = ByteArrayToString(tmp1);
+                        var baseDecryptor = ByteArrayToString(tmp2);
 
-                        var output = $"{_valueDecryptorFunction}(\"{baseEncrypted}\", {baseDecryptor})";
+                        var output = $"{_valueDecryptorFunction}({baseEncrypted}, {baseDecryptor})";
 
                         // Replace
                         str = str.Remove(tagIndex, tagLength + 1).Insert(tagIndex, output);
@@ -1084,7 +1044,6 @@ namespace SharpLoader.Core
 
                     var tmp1 = GetVariableName(str);
                     var tmp2 = GetVariableName(str);
-                    var tmp3 = GetVariableName(str);
 
                     var decryptorOne = GetVariableName(str);
                     var decryptorTwo = GetVariableName(str);
@@ -1096,23 +1055,21 @@ namespace SharpLoader.Core
                                $"{{" +
                                $"public static class {className}" +
                                $"{{" +
-                               $"private static byte[] {tmp1};" +
+                               $"private static byte[] {tmp1} = new byte[4];" +
                                $"private static byte[] {tmp2} = new byte[4];" +
-                               $"private static byte[] {tmp3} = new byte[4];" +
                                $"private static int {decryptorOne};" +
                                $"private static int {decryptorTwo};" +
                                $"private static int {result};" +
-                               $"public static int {funcName}(long {baseDecryptor})" +
+                               $"public static int {funcName}(byte[] {baseDecryptor})" +
                                $"{{" +
-                               $"{tmp1} = BitConverter.GetBytes({baseDecryptor});" +
                                $"<swap>" +
-                               $"Array.Copy({tmp1}, 0, {tmp2}, 0, 4);" +
-                               $"Array.Copy({tmp1}, 4, {tmp3}, 0, 4);" +
+                               $"Array.Copy({baseDecryptor}, 0, {tmp1}, 0, 4);" +
+                               $"Array.Copy({baseDecryptor}, 4, {tmp2}, 0, 4);" +
                                $"<trash>" +
                                $"<swap/>" +
                                $"<swap>" +
-                               $"{decryptorOne} = BitConverter.ToInt32({tmp2}, 0);" +
-                               $"{decryptorTwo} = BitConverter.ToInt32({tmp3}, 0);" +
+                               $"{decryptorOne} = BitConverter.ToInt32({tmp1}, 0);" +
+                               $"{decryptorTwo} = BitConverter.ToInt32({tmp2}, 0);" +
                                $"<trash>" +
                                $"<swap/>" +
                                $"<swap>" +
@@ -1193,7 +1150,7 @@ namespace SharpLoader.Core
                             var tmp1 = new byte[8];
                             Array.Copy(tmp2, 0, tmp1, 0, 4);
                             Array.Copy(tmp3, 0, tmp1, 4, 4);
-                            var baseDecryptor = BitConverter.ToInt64(tmp1, 0);
+                            var baseDecryptor = ByteArrayToString(tmp1);
 
                             cases[i] = $"case {switchValues[i]}:{{{finalBlocks[i]}{switchName}={_xorDecryptorFunction}({baseDecryptor});break;}}<block>";
                         }
@@ -1349,6 +1306,18 @@ namespace SharpLoader.Core
             }
 
             return blocks;
+        }
+
+        private string ByteArrayToString(byte[] byteArray)
+        {
+            var returnSb = new StringBuilder("new byte[] {");
+            foreach (var b in byteArray)
+            {
+                returnSb.Append(' ' + b.ToString() + ',');
+            }
+            returnSb.Remove(returnSb.Length - 1, 1);
+            returnSb.Append("}");
+            return returnSb.ToString();
         }
     }
 }
