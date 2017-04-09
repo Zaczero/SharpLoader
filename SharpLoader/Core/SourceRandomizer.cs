@@ -278,7 +278,7 @@ namespace SharpLoader.Core
                 }
 
                 // Replace
-                str = str.Remove(tagIndex, tagLength + 1).Insert(tagIndex, outputValue.ToString());
+                str = str.Remove(tagIndex, tagLength + 1).Insert(tagIndex, InjectInt(str, outputValue));
             }
         }
 
@@ -353,7 +353,7 @@ namespace SharpLoader.Core
                 }
 
                 // Replace
-                str = str.Remove(tagIndex, tagLength + 1).Insert(tagIndex, output);
+                str = str.Remove(tagIndex, tagLength + 1).Insert(tagIndex, InjectString(str, output));
             }
         }
 
@@ -491,7 +491,7 @@ namespace SharpLoader.Core
                             }
                         }
 
-                        trash += $"\"{varValue}\".{operation};";
+                        trash += $"{InjectString(str, varValue)}.{operation};";
                     }
                     else if(rndValue < trashChances[trashChancesIndex++])
                     {
@@ -532,7 +532,7 @@ namespace SharpLoader.Core
                             }
                         }
 
-                        trash += $"{varType} {varName}={varValue}\0{varName}{operation}={varChange};";
+                        trash += $"{varType} {varName}=({varType}){InjectInt(str, varValue)}\0{varName}{operation}=({varType}){InjectInt(str, varChange)};";
                     }
                     else if (rndValue < trashChances[trashChancesIndex++])
                     {
@@ -651,12 +651,12 @@ namespace SharpLoader.Core
                                    $"<trash>" +
                                    $"<swap/>" +
                                    $"<flow/>" +
-                                   $"for(int {i} = 0; {i} < {baseEncrypted}.Length; {i}++)" +
+                                   $"for(int {i} = {InjectInt(str, 0)}; {i} < {baseEncrypted}.Length; {i}++)" +
                                    $"{{" +
                                    $"<flow>" +
-                                   $"{a} = {baseDecryptor}[0] % {baseDecryptor}[1];" +
+                                   $"{a} = {baseDecryptor}[{InjectInt(str, 0)}] % {baseDecryptor}[{InjectInt(str, 1)}];" +
                                    $"<trash 4>" +
-                                   $"{b} = {i} + {baseDecryptor}[1];" +
+                                   $"{b} = {i} + {baseDecryptor}[{InjectInt(str, 1)}];" +
                                    $"<trash 4>" +
                                    $"{c} = {a} * {b};" +
                                    $"<trash 4>" +
@@ -710,8 +710,8 @@ namespace SharpLoader.Core
 
                         var tmp2 = new[] { decryptorOne, decryptorTwo };
 
-                        var baseEncrypted = ByteArrayToString(tmp1);
-                        var baseDecryptor = ByteArrayToString(tmp2);
+                        var baseEncrypted = ByteArrayToString(str, tmp1);
+                        var baseDecryptor = ByteArrayToString(str, tmp2);
 
                         var output = $"{_stringDecryptorFunction}({baseEncrypted},{baseDecryptor})";
 
@@ -759,12 +759,12 @@ namespace SharpLoader.Core
                                    $"<trash>" +
                                    $"<swap/>" +
                                    $"<flow/>" +
-                                   $"for(int {i} = 0; {i} < {baseEncrypted}.Length; {i}++)" +
+                                   $"for(int {i} = {InjectInt(str, 0)}; {i} < {baseEncrypted}.Length; {i}++)" +
                                    $"{{" +
                                    $"<flow>" +
-                                   $"{a} = {baseDecryptor}[0] % {baseDecryptor}[1];" +
+                                   $"{a} = {baseDecryptor}[{InjectInt(str, 0)}] % {baseDecryptor}[{InjectInt(str, 1)}];" +
                                    $"<trash 4>" +
-                                   $"{b} = {i} + {baseDecryptor}[1];" +
+                                   $"{b} = {i} + {baseDecryptor}[{InjectInt(str, 1)}];" +
                                    $"<trash 4>" +
                                    $"{c} = {a} * {b};" +
                                    $"<trash 4>" +
@@ -818,8 +818,8 @@ namespace SharpLoader.Core
 
                         var tmp2 = new[] { decryptorOne, decryptorTwo };
 
-                        var baseEncrypted = ByteArrayToString(tmp1);
-                        var baseDecryptor = ByteArrayToString(tmp2);
+                        var baseEncrypted = ByteArrayToString(str, tmp1);
+                        var baseDecryptor = ByteArrayToString(str, tmp2);
 
                         var output = $"{_charDecryptorFunction}({baseEncrypted},{baseDecryptor})";
 
@@ -859,12 +859,12 @@ namespace SharpLoader.Core
                                    $"{{" +
                                    $"<flow>" +
                                    $"<swap>" +
-                                   $"{encrypted} = BitConverter.ToInt32({baseEncrypted}, 0);" +
+                                   $"{encrypted} = BitConverter.ToInt32({baseEncrypted}, {InjectInt(str, 0)});" +
                                    $"<trash>" +
                                    $"<swap/>" +
-                                   $"{a} = {baseDecryptor}[0] % {baseDecryptor}[1];" +
+                                   $"{a} = {baseDecryptor}[{InjectInt(str, 0)}] % {baseDecryptor}[{InjectInt(str, 1)}];" +
                                    $"<trash 4>" +
-                                   $"{b} = {a} * {baseDecryptor}[1];" +
+                                   $"{b} = {a} * {baseDecryptor}[{InjectInt(str, 1)}];" +
                                    $"<trash 4>" +
                                    $"{c} = {b} ^ {encrypted};" +
                                    $"<trash 4>" +
@@ -919,8 +919,8 @@ namespace SharpLoader.Core
                         var tmp1 = BitConverter.GetBytes(encrypted);
                         var tmp2 = new[] {decryptorOne, decryptorTwo};
 
-                        var baseEncrypted = ByteArrayToString(tmp1);
-                        var baseDecryptor = ByteArrayToString(tmp2);
+                        var baseEncrypted = ByteArrayToString(str, tmp1);
+                        var baseDecryptor = ByteArrayToString(str, tmp2);
 
                         var output = $"{_valueDecryptorFunction}({baseEncrypted}, {baseDecryptor})";
 
@@ -1055,21 +1055,21 @@ namespace SharpLoader.Core
                                $"{{" +
                                $"public static class {className}" +
                                $"{{" +
-                               $"private static byte[] {tmp1} = new byte[4];" +
-                               $"private static byte[] {tmp2} = new byte[4];" +
+                               $"private static byte[] {tmp1} = new byte[{InjectInt(str, 4)}];" +
+                               $"private static byte[] {tmp2} = new byte[{InjectInt(str, 4)}];" +
                                $"private static int {decryptorOne};" +
                                $"private static int {decryptorTwo};" +
                                $"private static int {result};" +
                                $"public static int {funcName}(byte[] {baseDecryptor})" +
                                $"{{" +
                                $"<swap>" +
-                               $"Array.Copy({baseDecryptor}, 0, {tmp1}, 0, 4);" +
-                               $"Array.Copy({baseDecryptor}, 4, {tmp2}, 0, 4);" +
+                               $"Array.Copy({baseDecryptor}, {InjectInt(str, 0)}, {tmp1}, {InjectInt(str, 0)}, {InjectInt(str, 4)});" +
+                               $"Array.Copy({baseDecryptor}, {InjectInt(str, 4)}, {tmp2}, {InjectInt(str, 0)}, {InjectInt(str, 4)});" +
                                $"<trash>" +
                                $"<swap/>" +
                                $"<swap>" +
-                               $"{decryptorOne} = BitConverter.ToInt32({tmp1}, 0);" +
-                               $"{decryptorTwo} = BitConverter.ToInt32({tmp2}, 0);" +
+                               $"{decryptorOne} = BitConverter.ToInt32({tmp1}, {InjectInt(str, 0)});" +
+                               $"{decryptorTwo} = BitConverter.ToInt32({tmp2}, {InjectInt(str, 0)});" +
                                $"<trash>" +
                                $"<swap/>" +
                                $"<swap>" +
@@ -1140,7 +1140,7 @@ namespace SharpLoader.Core
                         // Last
                         if (i + 1 == cases.Length)
                         {
-                            cases[i] = $"case {switchValues[i]}:{{{finalBlocks[i]}{doLoopName}=false;break;}}";
+                            cases[i] = $"case {switchValues[i]}:{{{finalBlocks[i]}{doLoopName}={InjectBool(str, false)};break;}}";
                         }
                         // Not last
                         else
@@ -1150,7 +1150,7 @@ namespace SharpLoader.Core
                             var tmp1 = new byte[8];
                             Array.Copy(tmp2, 0, tmp1, 0, 4);
                             Array.Copy(tmp3, 0, tmp1, 4, 4);
-                            var baseDecryptor = ByteArrayToString(tmp1);
+                            var baseDecryptor = ByteArrayToString(str, tmp1);
 
                             cases[i] = $"case {switchValues[i]}:{{{finalBlocks[i]}{switchName}={_xorDecryptorFunction}({baseDecryptor});break;}}<block>";
                         }
@@ -1159,7 +1159,7 @@ namespace SharpLoader.Core
                     // Generate output
                     var caseOutput = cases.Aggregate(string.Empty, (current, c) => current + c);
                     var innerOutput = cases.Length < 2 ? caseOutput : $"<swap>{caseOutput}<swap/>";
-                    var output = $"<swap>int {switchName}={switchValues[0]};bool {doLoopName}=true;<swap/>while({doLoopName}){{switch({switchName}){{{innerOutput}}}}}";
+                    var output = $"<swap>int {switchName}={InjectInt(str, switchValues[0])};bool {doLoopName}={InjectBool(str, true)};<swap/>while({doLoopName}){{switch({switchName}){{{innerOutput}}}}}";
 
                     // Replace
                     str = str.Remove(tagIndex, tagLength + endTagIndex + endTagLength).Insert(tagIndex, output);
@@ -1308,16 +1308,96 @@ namespace SharpLoader.Core
             return blocks;
         }
 
-        private string ByteArrayToString(byte[] byteArray)
+        private string ByteArrayToString(string str, byte[] byteArray)
         {
             var returnSb = new StringBuilder("new byte[] {");
             foreach (var b in byteArray)
             {
-                returnSb.Append(' ' + b.ToString() + ',');
+                returnSb.Append(' ' + InjectByte(str, b) + ',');
             }
             returnSb.Remove(returnSb.Length - 1, 1);
             returnSb.Append("}");
             return returnSb.ToString();
+        }
+
+        private string InjectByte(string str, byte b)
+        {
+            //return b.ToString();
+
+            var namespaceName = GetVariableName(str);
+            var className = GetVariableName(str);
+            var propertyName = GetVariableName(str);
+
+            Inject.Add($"using System;" +
+                               $"namespace {namespaceName}" +
+                               $"{{" +
+                               $"public static class {className}" +
+                               $"{{" +
+                               $"public static byte {propertyName} = {b};" +
+                               $"}}" +
+                               $"}}");
+
+            return $"{namespaceName}.{className}.{propertyName}";
+        }
+
+        private string InjectBool(string str, bool b)
+        {
+            //return b.ToString().ToLower();
+
+            var namespaceName = GetVariableName(str);
+            var className = GetVariableName(str);
+            var propertyName = GetVariableName(str);
+
+            Inject.Add($"using System;" +
+                               $"namespace {namespaceName}" +
+                               $"{{" +
+                               $"public static class {className}" +
+                               $"{{" +
+                               $"public static bool {propertyName} = {b.ToString().ToLower()};" +
+                               $"}}" +
+                               $"}}");
+
+            return $"{namespaceName}.{className}.{propertyName}";
+        }
+
+        private string InjectInt(string str, int b)
+        {
+            //return b.ToString();
+
+            var namespaceName = GetVariableName(str);
+            var className = GetVariableName(str);
+            var propertyName = GetVariableName(str);
+
+            Inject.Add($"using System;" +
+                                $"namespace {namespaceName}" +
+                                $"{{" +
+                                $"public static class {className}" +
+                                $"{{" +
+                                $"public static int {propertyName} = {b};" +
+                                $"}}" +
+                                $"}}");
+
+            return $"{namespaceName}.{className}.{propertyName}";
+        }
+
+        private string InjectString(string str, string b)
+        {
+            //return $"\"{b}\"";
+
+            var namespaceName = GetVariableName(str);
+            var className = GetVariableName(str);
+            var propertyName = GetVariableName(str);
+
+            Inject.Add($"using System;" +
+                                $"namespace {namespaceName}" +
+                                $"{{" +
+                                $"public static class {className}" +
+                                $"{{" +
+                                $"public static string {propertyName} = \"{b}\";" +
+                                $"}}" +
+                                $"}}");
+
+            return $"{namespaceName}.{className}.{propertyName}";
         }
     }
 }
