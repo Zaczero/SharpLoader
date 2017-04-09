@@ -586,6 +586,8 @@ namespace SharpLoader.Core
 
         private bool _stringDecryptorInjected;
         private string _stringDecryptorFunction;
+        private bool _charDecryptorInjected;
+        private string _charDecryptorFunction;
         private bool _valueDecryptorInjected;
         private string _valueDecryptorFunction;
         private void Encrypt(ref string str)
@@ -610,7 +612,7 @@ namespace SharpLoader.Core
                 var arg = str.Substring(tagIndex + 5, tagLength - 5);
 
                 // String
-                if (arg.Contains('"'))
+                if (arg.EndsWith("\""))
                 {
                     // Inject decryptor
                     if (!_stringDecryptorInjected)
@@ -725,6 +727,127 @@ namespace SharpLoader.Core
                         var baseDecryptor = Convert.ToBase64String(tmp2);
 
                         var output = $"{_stringDecryptorFunction}(\"{baseEncrypted}\",\"{baseDecryptor}\")";
+
+                        // Replace
+                        str = str.Remove(tagIndex, tagLength + 1).Insert(tagIndex, output);
+                    }
+                }
+                // Char
+                else if (arg.EndsWith("'"))
+                {
+                    // Inject decryptor
+                    if (!_charDecryptorInjected)
+                    {
+                        var namespaceName = GetVariableName(str);
+                        var className = GetVariableName(str);
+                        var funcName = GetVariableName(str);
+
+                        var baseEncrypted = GetVariableName(str);
+                        var baseDecryptor = GetVariableName(str);
+
+                        var tmp1 = GetVariableName(str);
+                        var tmp2 = GetVariableName(str);
+
+                        var decryptorOne = GetVariableName(str);
+                        var decryptorTwo = GetVariableName(str);
+
+                        var result = GetVariableName(str);
+                        var i = GetVariableName(str);
+
+                        var a = GetVariableName(str);
+                        var b = GetVariableName(str);
+                        var c = GetVariableName(str);
+                        var d = GetVariableName(str);
+
+                        Inject.Add($"using System;" +
+                                   $"using System.Text;" +
+                                   $"namespace {namespaceName}" +
+                                   $"{{" +
+                                   $"public static class {className}" +
+                                   $"{{" +
+                                   $"private static byte[] {tmp1};" +
+                                   $"private static byte[] {tmp2};" +
+                                   $"private static byte[] {result};" +
+                                   $"private static byte {decryptorOne};" +
+                                   $"private static byte {decryptorTwo};" +
+                                   $"private static int {a};" +
+                                   $"private static int {b};" +
+                                   $"private static int {c};" +
+                                   $"private static int {d};" +
+                                   $"public static char {funcName}(string {baseEncrypted}, string {baseDecryptor})" +
+                                   $"{{" +
+                                   $"<flow>" +
+                                   $"<swap>" +
+                                   $"{tmp1} = Convert.FromBase64String({baseEncrypted});" +
+                                   $"{tmp2} = Convert.FromBase64String({baseDecryptor});" +
+                                   $"<trash>" +
+                                   $"<swap/>" +
+                                   $"<swap>" +
+                                   $"{result} = new byte[{tmp1}.Length];" +
+                                   $"{decryptorOne} = {tmp2}[0];" +
+                                   $"{decryptorTwo} = {tmp2}[1];" +
+                                   $"<trash>" +
+                                   $"<swap/>" +
+                                   $"<flow/>" +
+                                   $"for(int {i} = 0; {i} < {tmp1}.Length; {i}++)" +
+                                   $"{{" +
+                                   $"<flow>" +
+                                   $"{a} = {decryptorOne} % {decryptorTwo};" +
+                                   $"{b} = {i} + {decryptorTwo};" +
+                                   $"{c} = {a} * {b};" +
+                                   $"{d} = {c} ^ {tmp1}[{i}];" +
+                                   $"{result}[{i}] = (byte){d};" +
+                                   $"<trash>" +
+                                   $"<flow/>" +
+                                   $"}}" +
+                                   $"<flow>" +
+                                   $"<trash>" +
+                                   $"return BitConverter.ToChar({result}, 0);" +
+                                   $"<flow/>" +
+                                   $"return \'\\0\';" +
+                                   $"}}" +
+                                   $"}}" +
+                                   $"}}");
+
+                        InjectAssemblies.Add("System.dll");
+
+                        _charDecryptorInjected = true;
+                        _charDecryptorFunction = $"{namespaceName}.{className}.{funcName}";
+                    }
+
+                    char rawChar;
+
+                    // Are arguments given?
+                    if (tagLength > 6)
+                    {
+                        // Substring arguments
+                        rawChar = str.Substring(tagIndex + 5, tagLength - 5).Trim('\'')[0];
+                    }
+                    // No arguments
+                    else
+                    {
+                        throw new Exception($"invalid argument value: null");
+                    }
+
+                    {
+                        var decryptorOne = (byte)_rnd.Next(byte.MinValue, byte.MaxValue);
+                        var decryptorTwo = (byte)_rnd.Next(1, byte.MaxValue);
+
+                        var stringBytes = BitConverter.GetBytes(rawChar);
+
+                        var tmp1 = new byte[stringBytes.Length];
+
+                        for (var i = 0; i < stringBytes.Length; i++)
+                        {
+                            tmp1[i] = (byte)(decryptorOne % decryptorTwo * (i + decryptorTwo) ^ stringBytes[i]);
+                        }
+
+                        var tmp2 = new[] { decryptorOne, decryptorTwo };
+
+                        var baseEncrypted = Convert.ToBase64String(tmp1);
+                        var baseDecryptor = Convert.ToBase64String(tmp2);
+
+                        var output = $"{_charDecryptorFunction}(\"{baseEncrypted}\",\"{baseDecryptor}\")";
 
                         // Replace
                         str = str.Remove(tagIndex, tagLength + 1).Insert(tagIndex, output);
