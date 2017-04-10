@@ -186,6 +186,18 @@ if (b == 0)
 //-<proxy/>
 ```
 
+#### 8.2. Proxy +1 argument
+Generates proxy variables for X argument.
+```c#
+int a = <proxy 58>;
+```
+```c#
+char a = <proxy 'C'>;
+```
+```c#
+string a = <proxy "Hello World">;
+```
+
 ## How to configure SharpLoader?
 All SharpLoader's configuration is stored in SharpLoader.ini file.
 
