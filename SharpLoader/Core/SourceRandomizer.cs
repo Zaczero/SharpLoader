@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Text;
@@ -646,8 +647,7 @@ namespace SharpLoader.Core
                         var className = GetRandomName();
                         var funcName = GetRandomName();
 
-                        var baseEncrypted = GetRandomName();
-                        var baseDecryptor = GetRandomName();
+                        var funcArg = GetRandomName();
 
                         var result = GetRandomName();
                         var i = GetRandomName();
@@ -668,24 +668,24 @@ namespace SharpLoader.Core
                                    $"private static int {b};" +
                                    $"private static int {c};" +
                                    $"private static int {d};" +
-                                   $"public static string {funcName}(byte[] {baseEncrypted}, byte[] {baseDecryptor})" +
+                                   $"public static string {funcName}(byte[] {funcArg})" +
                                    $"{{" +
                                    $"<flow>" +
                                    $"<swap>" +
-                                   $"{result} = new byte[{baseEncrypted}.Length];" +
+                                   $"{result} = new byte[{funcArg}.Length - {Inject(2)}];" +
                                    $"<trash>" +
                                    $"<swap/>" +
                                    $"<flow/>" +
-                                   $"for(int {i} = {Inject(0)}; {i} < {baseEncrypted}.Length; {i}++)" +
+                                   $"for(int {i} = {Inject(0)}; {i} < {result}.Length; {i}++)" +
                                    $"{{" +
                                    $"<flow>" +
-                                   $"{a} = {baseDecryptor}[{Inject(0)}] % {baseDecryptor}[{Inject(1)}];" +
+                                   $"{a} = {funcArg}[{Inject(0)}] % {funcArg}[{Inject(1)}];" +
                                    $"<trash 4>" +
-                                   $"{b} = {i} + {baseDecryptor}[{Inject(1)}];" +
+                                   $"{b} = {i} + {funcArg}[{Inject(1)}];" +
                                    $"<trash 4>" +
                                    $"{c} = {a} * {b};" +
                                    $"<trash 4>" +
-                                   $"{d} = {c} ^ {baseEncrypted}[{i}];" +
+                                   $"{d} = {c} ^ {funcArg}[{i} + {Inject(2)}];" +
                                    $"<trash 4>" +
                                    $"{result}[{i}] = (byte){d};" +
                                    $"<trash 4>" +
@@ -721,24 +721,21 @@ namespace SharpLoader.Core
                     }
 
                     {
-                        var decryptorOne = (byte)_rnd.Next(byte.MinValue, byte.MaxValue);
-                        var decryptorTwo = (byte)_rnd.Next(1, byte.MaxValue);
-                        
                         var stringBytes = Encoding.Unicode.GetBytes(rawString);
 
-                        var tmp1 = new byte[stringBytes.Length];
+                        var tmp1 = new byte[stringBytes.Length + 2];
+
+                        tmp1[0] = (byte)_rnd.Next(byte.MinValue, byte.MaxValue);
+                        tmp1[1] = (byte)_rnd.Next(1, byte.MaxValue);
 
                         for (var i = 0; i < stringBytes.Length; i++)
                         {
-                            tmp1[i] = (byte)(decryptorOne % decryptorTwo * (i + decryptorTwo) ^ stringBytes[i]);
+                            tmp1[i + 2] = (byte)(tmp1[0] % tmp1[1] * (i + tmp1[1]) ^ stringBytes[i]);
                         }
 
-                        var tmp2 = new[] { decryptorOne, decryptorTwo };
+                        var funcArg = ByteArrayToString(tmp1);
 
-                        var baseEncrypted = ByteArrayToString(tmp1);
-                        var baseDecryptor = ByteArrayToString(tmp2);
-
-                        var output = $"{_stringDecryptorFunction}({baseEncrypted},{baseDecryptor})";
+                        var output = $"{_stringDecryptorFunction}({funcArg})";
 
                         // Replace
                         str = str.Remove(tagIndex, tagLength + 1).Insert(tagIndex, output);
@@ -754,8 +751,7 @@ namespace SharpLoader.Core
                         var className = GetRandomName();
                         var funcName = GetRandomName();
 
-                        var baseEncrypted = GetRandomName();
-                        var baseDecryptor = GetRandomName();
+                        var funcArg = GetRandomName();
 
                         var result = GetRandomName();
                         var i = GetRandomName();
@@ -776,24 +772,24 @@ namespace SharpLoader.Core
                                    $"private static int {b};" +
                                    $"private static int {c};" +
                                    $"private static int {d};" +
-                                   $"public static char {funcName}(byte[] {baseEncrypted}, byte[] {baseDecryptor})" +
+                                   $"public static char {funcName}(byte[] {funcArg})" +
                                    $"{{" +
                                    $"<flow>" +
                                    $"<swap>" +
-                                   $"{result} = new byte[{baseEncrypted}.Length];" +
+                                   $"{result} = new byte[{funcArg}.Length - {Inject(2)}];" +
                                    $"<trash>" +
                                    $"<swap/>" +
                                    $"<flow/>" +
-                                   $"for(int {i} = {Inject(0)}; {i} < {baseEncrypted}.Length; {i}++)" +
+                                   $"for(int {i} = {Inject(0)}; {i} < {result}.Length; {i}++)" +
                                    $"{{" +
                                    $"<flow>" +
-                                   $"{a} = {baseDecryptor}[{Inject(0)}] % {baseDecryptor}[{Inject(1)}];" +
+                                   $"{a} = {funcArg}[{Inject(0)}] % {funcArg}[{Inject(1)}];" +
                                    $"<trash 4>" +
-                                   $"{b} = {i} + {baseDecryptor}[{Inject(1)}];" +
+                                   $"{b} = {i} + {funcArg}[{Inject(1)}];" +
                                    $"<trash 4>" +
                                    $"{c} = {a} * {b};" +
                                    $"<trash 4>" +
-                                   $"{d} = {c} ^ {baseEncrypted}[{i}];" +
+                                   $"{d} = {c} ^ {funcArg}[{i} + {Inject(2)}];" +
                                    $"<trash 4>" +
                                    $"{result}[{i}] = (byte){d};" +
                                    $"<trash 4>" +
@@ -829,24 +825,21 @@ namespace SharpLoader.Core
                     }
 
                     {
-                        var decryptorOne = (byte)_rnd.Next(byte.MinValue, byte.MaxValue);
-                        var decryptorTwo = (byte)_rnd.Next(1, byte.MaxValue);
-
                         var stringBytes = BitConverter.GetBytes(rawChar);
 
-                        var tmp1 = new byte[stringBytes.Length];
+                        var tmp1 = new byte[stringBytes.Length + 2];
+
+                        tmp1[0] = (byte)_rnd.Next(byte.MinValue, byte.MaxValue);
+                        tmp1[1] = (byte)_rnd.Next(1, byte.MaxValue);
 
                         for (var i = 0; i < stringBytes.Length; i++)
                         {
-                            tmp1[i] = (byte)(decryptorOne % decryptorTwo * (i + decryptorTwo) ^ stringBytes[i]);
+                            tmp1[i + 2] = (byte)(tmp1[0] % tmp1[1] * (i + tmp1[1]) ^ stringBytes[i]);
                         }
 
-                        var tmp2 = new[] { decryptorOne, decryptorTwo };
+                        var funcArg = ByteArrayToString(tmp1);
 
-                        var baseEncrypted = ByteArrayToString(tmp1);
-                        var baseDecryptor = ByteArrayToString(tmp2);
-
-                        var output = $"{_charDecryptorFunction}({baseEncrypted},{baseDecryptor})";
+                        var output = $"{_charDecryptorFunction}({funcArg})";
 
                         // Replace
                         str = str.Remove(tagIndex, tagLength + 1).Insert(tagIndex, output);
@@ -862,8 +855,7 @@ namespace SharpLoader.Core
                         var className = GetRandomName();
                         var funcName = GetRandomName();
 
-                        var baseEncrypted = GetRandomName();
-                        var baseDecryptor = GetRandomName();
+                        var funcArg = GetRandomName();
 
                         var encrypted = GetRandomName();
 
@@ -880,16 +872,16 @@ namespace SharpLoader.Core
                                    $"private static int {a};" +
                                    $"private static int {b};" +
                                    $"private static int {c};" +
-                                   $"public static int {funcName}(byte[] {baseEncrypted}, byte[] {baseDecryptor})" +
+                                   $"public static int {funcName}(byte[] {funcArg})" +
                                    $"{{" +
                                    $"<flow>" +
                                    $"<swap>" +
-                                   $"{encrypted} = BitConverter.ToInt32({baseEncrypted}, {Inject(0)});" +
+                                   $"{encrypted} = BitConverter.ToInt32({funcArg}, {Inject(2)});" +
                                    $"<trash>" +
                                    $"<swap/>" +
-                                   $"{a} = {baseDecryptor}[{Inject(0)}] % {baseDecryptor}[{Inject(1)}];" +
+                                   $"{a} = {funcArg}[{Inject(0)}] % {funcArg}[{Inject(1)}];" +
                                    $"<trash 4>" +
-                                   $"{b} = {a} * {baseDecryptor}[{Inject(1)}];" +
+                                   $"{b} = {a} * {funcArg}[{Inject(1)}];" +
                                    $"<trash 4>" +
                                    $"{c} = {b} ^ {encrypted};" +
                                    $"<trash 4>" +
@@ -936,18 +928,19 @@ namespace SharpLoader.Core
                     }
 
                     {
-                        var decryptorOne = (byte)_rnd.Next(byte.MinValue, byte.MaxValue);
-                        var decryptorTwo = (byte)_rnd.Next(1, byte.MaxValue);
+                        var tmp1 = new byte[6];
 
-                        var encrypted = decryptorOne % decryptorTwo * decryptorTwo ^ rawValue;
+                        tmp1[0] = (byte)_rnd.Next(byte.MinValue, byte.MaxValue);
+                        tmp1[1] = (byte)_rnd.Next(1, byte.MaxValue);
 
-                        var tmp1 = BitConverter.GetBytes(encrypted);
-                        var tmp2 = new[] {decryptorOne, decryptorTwo};
+                        var encrypted = tmp1[0] % tmp1[1] * tmp1[1] ^ rawValue;
 
-                        var baseEncrypted = ByteArrayToString(tmp1);
-                        var baseDecryptor = ByteArrayToString(tmp2);
+                        var tmp2 = BitConverter.GetBytes(encrypted);
+                        Array.Copy(tmp2, 0, tmp1, 2, 4);
 
-                        var output = $"{_valueDecryptorFunction}({baseEncrypted}, {baseDecryptor})";
+                        var funcArg = ByteArrayToString(tmp1);
+
+                        var output = $"{_valueDecryptorFunction}({funcArg})";
 
                         // Replace
                         str = str.Remove(tagIndex, tagLength + 1).Insert(tagIndex, output);
@@ -980,12 +973,65 @@ namespace SharpLoader.Core
                 if (tagLength > 7)
                 {
                     // Substring arguments
-                    argNamespace = str.Substring(tagIndex + 7, tagLength - 7);
+                    var argStr = str.Substring(tagIndex + 7, tagLength - 7);
+
+                    // String proxy
+                    if (argStr.EndsWith("\""))
+                    {
+                        var output = Inject(argStr.Trim('"'));
+
+                        // Replace
+                        str = str.Remove(tagIndex, tagLength + 1).Insert(tagIndex, output);
+
+                        continue;
+                    }
+                    // Char proxy
+                    if (argStr.EndsWith("'"))
+                    {
+                        var output = $"{Inject(argStr.Trim('\''))}[{Inject(0)}]";
+
+                        // Replace
+                        str = str.Remove(tagIndex, tagLength + 1).Insert(tagIndex, output);
+
+                        continue;
+                    }
+                    // Value proxy
+                    if (argStr.ToCharArray().All(char.IsDigit))
+                    {
+                        int arg;
+
+                        // Hex
+                        if (argStr.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
+                        {
+                            argStr = argStr.Remove(0, 2);
+                            if (!int.TryParse(argStr, NumberStyles.HexNumber, null, out arg))
+                            {
+                                throw new Exception($"invalid argument value: {str.Substring(tagIndex + 5, tagLength - 5)}");
+                            }
+                        }
+                        // Dec
+                        else
+                        {
+                            if (!int.TryParse(argStr, out arg))
+                            {
+                                throw new Exception($"invalid argument value: {str.Substring(tagIndex + 5, tagLength - 5)}");
+                            }
+                        }
+
+                        var output = Inject(arg);
+
+                        // Replace
+                        str = str.Remove(tagIndex, tagLength + 1).Insert(tagIndex, output);
+
+                        continue;
+                    }
+                    // Namespace
+                    argNamespace = argStr;
                 }
                 // No arguments
                 else
                 {
-
+                    argNamespace = GetRandomName();
                 }
 
                 const int endTagLength = 8;
@@ -1008,7 +1054,7 @@ namespace SharpLoader.Core
 
                 for (var i = 0; i < blocks.Length; i++)
                 {
-                    var namespaceName = argNamespace == string.Empty ? GetRandomName() : argNamespace;
+                    var namespaceName = argNamespace;
                     var className = GetRandomName();
                     var funcName = GetRandomName();
 
@@ -1026,10 +1072,12 @@ namespace SharpLoader.Core
                     funcs[i] = $"{namespaceName}.{className}.{funcName}();";
                 }
 
-                var output = funcs.Aggregate(string.Empty, (current, func) => current + func);
+                {
+                    var output = funcs.Aggregate(string.Empty, (current, func) => current + func);
 
-                // Replace
-                str = str.Remove(tagIndex, tagLength + 1 + endTagIndex + endTagLength).Insert(tagIndex, output);
+                    // Replace
+                    str = str.Remove(tagIndex, tagLength + 1 + endTagIndex + endTagLength).Insert(tagIndex, output);
+                }
             }
         }
 
