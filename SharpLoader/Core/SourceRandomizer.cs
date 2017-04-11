@@ -35,6 +35,15 @@ namespace SharpLoader.Core
         private readonly Random _rnd;
         private readonly int _seed;
 
+        private bool _stringDecryptorInjected;
+        private string _stringDecryptorFunction;
+        private bool _charDecryptorInjected;
+        private string _charDecryptorFunction;
+        private bool _valueDecryptorInjected;
+        private string _valueDecryptorFunction;
+        private bool _xorDecryptorInjected;
+        private string _xorDecryptorFunction;
+
         public SourceRandomizer(int seed)
         {
             _rnd = new Random(seed);
@@ -610,12 +619,6 @@ namespace SharpLoader.Core
             }
         }
 
-        private bool _stringDecryptorInjected;
-        private string _stringDecryptorFunction;
-        private bool _charDecryptorInjected;
-        private string _charDecryptorFunction;
-        private bool _valueDecryptorInjected;
-        private string _valueDecryptorFunction;
         private void Encrypt(ref string str)
         {
             while (true)
@@ -1080,9 +1083,7 @@ namespace SharpLoader.Core
                 }
             }
         }
-
-        private bool _xorDecryptorInjected;
-        private string _xorDecryptorFunction;
+        
         private void Flow(ref string str)
         {
             while (true)
