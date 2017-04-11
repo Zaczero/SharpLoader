@@ -304,7 +304,7 @@ namespace SharpLoader.Core
                 }
 
                 // Replace
-                str = str.Remove(tagIndex, tagLength + 1).Insert(tagIndex, Inject(outputValue));
+                str = str.Remove(tagIndex, tagLength + 1).Insert(tagIndex, outputValue.ToString());
             }
         }
 
@@ -909,7 +909,7 @@ namespace SharpLoader.Core
                             arg = arg.Remove(0, 2);
                             if (!int.TryParse(arg, NumberStyles.HexNumber, null, out rawValue))
                             {
-                                throw new Exception($"invalid argument value: {str.Substring(tagIndex + 5, tagLength - 5)}");
+                                throw new Exception($"invalid argument value: {arg}");
                             }
                         }
                         // Dec
@@ -917,7 +917,7 @@ namespace SharpLoader.Core
                         {
                             if (!int.TryParse(arg, out rawValue))
                             {
-                                throw new Exception($"invalid argument value: {str.Substring(tagIndex + 5, tagLength - 5)}");
+                                throw new Exception($"invalid argument value: {arg}");
                             }
                         }
                     }
