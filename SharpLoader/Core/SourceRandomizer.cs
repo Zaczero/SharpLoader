@@ -83,8 +83,6 @@ namespace SharpLoader.Core
 
         public string GetRandomString(int length)
         {
-            //const string source = "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM";
-
             var rndStrSb = new StringBuilder(length);
 
             for (var i = 0; i < length; i++)
