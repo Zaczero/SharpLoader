@@ -201,19 +201,19 @@ string a = <proxy "Hello World">;
 ## How to configure SharpLoader?
 All SharpLoader's configuration is stored in SharpLoader.ini file.
 
-#### Directory
-Base directory for all source files.  
-`Directory=MyApplication`
-
-#### Assemblies
+#### References
 All references that your application use (dlls).  
 Separated by ';' character.  
-`Assemblies=System.dll;System.Windows.Forms.dll`
+`References=System.dll;System.Windows.Forms.dll`
+
+#### Directory
+Base directory where SharpLoader scans for source files.  
+`Directory=MySources`
 
 #### Sources
-Paths to all source files that your application use.  
+Paths to all external (out of base directory) source files that your application use.  
 Separated by ';' character.  
-`Sources=Program.cs;Utilities.cs;Enums\State.cs`
+`Sources=C:\AdditionalSources\Utilities.cs`
 
 *TIP: Alternatively you can drag'n'drop source files/directories*
 
@@ -221,10 +221,10 @@ Separated by ';' character.
 Compiled assembly name.  
 `Output=MyApplication`
 
-#### AutoRun
-Should assembly be run after successful compilation.  
-`AutoRun=true`
-
 #### Arguments
 Compiler arguments (unsafe, prefer 32-bit etc.).  
 `Arguments=/platform:anycpu32bitpreferred`
+
+#### AutoRun
+Should assembly be run after successful compilation.  
+`AutoRun=true`
