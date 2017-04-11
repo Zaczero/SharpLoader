@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using SharpLoader.Core;
 
@@ -344,6 +345,12 @@ namespace SharpLoader
                 Process.Start(outputName);
             }
 
+            var outputBytes = File.ReadAllBytes(outputName);
+            var hash = MD5.Create().ComputeHash(outputBytes);
+
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine($"-=: MD5 : {ByteArrayToString(hash)}");
+
             Console.ForegroundColor = ConsoleColor.Green;
             Console.Write($"-=: DONE [{outputName}] (press any key to exit)");
             Console.ReadKey();
@@ -366,6 +373,19 @@ namespace SharpLoader
             }
 
             return returnList;
+        }
+
+        private static string ByteArrayToString(byte[] bytes)
+        {
+            var returnSb = new StringBuilder();
+
+            foreach (var b in bytes)
+            {
+                var hex = b.ToString("X");
+                returnSb.Append(hex.Length < 2 ? '0' + hex : hex);
+            }
+
+            return returnSb.ToString();
         }
     }
 }

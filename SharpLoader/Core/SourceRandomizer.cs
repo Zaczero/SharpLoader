@@ -734,7 +734,7 @@ namespace SharpLoader.Core
                             tmp1[i + 2] = (byte)(tmp1[0] % tmp1[1] * (i + tmp1[1]) ^ stringBytes[i]);
                         }
 
-                        var funcArg = ByteArrayToString(tmp1);
+                        var funcArg = ByteArrayToCode(tmp1);
 
                         var output = $"{_stringDecryptorFunction}({funcArg})";
 
@@ -838,7 +838,7 @@ namespace SharpLoader.Core
                             tmp1[i + 2] = (byte)(tmp1[0] % tmp1[1] * (i + tmp1[1]) ^ stringBytes[i]);
                         }
 
-                        var funcArg = ByteArrayToString(tmp1);
+                        var funcArg = ByteArrayToCode(tmp1);
 
                         var output = $"{_charDecryptorFunction}({funcArg})";
 
@@ -939,7 +939,7 @@ namespace SharpLoader.Core
                         var tmp2 = BitConverter.GetBytes(encrypted);
                         Array.Copy(tmp2, 0, tmp1, 2, 4);
 
-                        var funcArg = ByteArrayToString(tmp1);
+                        var funcArg = ByteArrayToCode(tmp1);
 
                         var output = $"{_valueDecryptorFunction}({funcArg})";
 
@@ -1222,7 +1222,7 @@ namespace SharpLoader.Core
                             var tmp1 = new byte[8];
                             Array.Copy(tmp2, 0, tmp1, 0, 4);
                             Array.Copy(tmp3, 0, tmp1, 4, 4);
-                            var baseDecryptor = ByteArrayToString(tmp1);
+                            var baseDecryptor = ByteArrayToCode(tmp1);
 
                             cases[i] = $"case {switchValues[i]}:{{{finalBlocks[i]}{switchName}={_xorDecryptorFunction}({baseDecryptor});break;}}<block>";
                         }
@@ -1380,7 +1380,7 @@ namespace SharpLoader.Core
             return blocks;
         }
 
-        private string ByteArrayToString(byte[] byteArray)
+        private string ByteArrayToCode(byte[] byteArray)
         {
             var returnSb = new StringBuilder("new byte[] {");
             foreach (var b in byteArray)
