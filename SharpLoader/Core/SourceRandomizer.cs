@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Text;
@@ -968,7 +967,7 @@ namespace SharpLoader.Core
                     throw new Exception("close tag not found");
                 }
 
-                var argNamespace = string.Empty;
+                string argNamespace;
 
                 // Are arguments given?
                 if (tagLength > 7)
