@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Text;
@@ -967,7 +968,7 @@ namespace SharpLoader.Core
                         continue;
                     }
                     // Value proxy
-                    if (argStr.ToCharArray().All(char.IsDigit))
+                    if (argStr.ToCharArray().All(char.IsDigit) || argStr.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
                     {
                         int arg;
 
