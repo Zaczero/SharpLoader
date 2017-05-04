@@ -10,7 +10,7 @@ namespace SharpLoader.Core
     public class SourceRandomizer
     {
         public readonly List<string> InjectSources = new List<string>();
-        public readonly List<string> InjectAssemblies = new List<string>();
+        public readonly List<string> InjectReferences = new List<string>();
 
         public readonly string InjectBytesNamespace;
         public readonly string InjectBytesClass;
@@ -695,7 +695,7 @@ namespace SharpLoader.Core
                                           $"}}" +
                                           $"}}");
 
-                        InjectAssemblies.Add("System.dll");
+                        InjectReferences.Add("System.dll");
 
                         _stringDecryptorInjected = true;
                         _stringDecryptorFunction = $"{namespaceName}.{className}.{funcName}";
@@ -781,7 +781,7 @@ namespace SharpLoader.Core
                                           $"}}" +
                                           $"}}");
 
-                        InjectAssemblies.Add("System.dll");
+                        InjectReferences.Add("System.dll");
 
                         _charDecryptorInjected = true;
                         _charDecryptorFunction = $"{namespaceName}.{className}.{funcName}";
@@ -866,7 +866,7 @@ namespace SharpLoader.Core
                                           $"}}" +
                                           $"}}");
 
-                        InjectAssemblies.Add("System.dll");
+                        InjectReferences.Add("System.dll");
 
                         _valueDecryptorInjected = true;
                         _valueDecryptorFunction = $"{namespaceName}.{className}.{funcName}";
@@ -1126,7 +1126,7 @@ namespace SharpLoader.Core
                                       $"}}" +
                                       $"}}");
 
-                    InjectAssemblies.Add("System.dll");
+                    InjectReferences.Add("System.dll");
 
                     _xorDecryptorInjected = true;
                     _xorDecryptorFunction = $"{namespaceName}.{className}.{funcName}";
