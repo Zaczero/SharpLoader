@@ -11,15 +11,8 @@ namespace SharpLoader
 {
     public class Program
     {
-        /* Bugs:
-         */
-
         /* Limitations:
-         * doesn't support $ strings
-         * doesn't support @ strings
-         * doesn't support VS code
-         * doesn't support => properties
-         * doesn't support few unicode values
+         * supports only c# 5.0
          */
 
         /* Exit codes:
@@ -32,7 +25,7 @@ namespace SharpLoader
          */
 
         private const string Author = "Zaczero";
-        private const string Version = "1.3";
+        private const string Version = "1.4-beta";
 
         private const int ReadBufferSize = 255;
 
