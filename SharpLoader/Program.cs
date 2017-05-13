@@ -11,15 +11,8 @@ namespace SharpLoader
 {
     public class Program
     {
-        /* Bugs:
-         */
-
         /* Limitations:
-         * doesn't support $ strings
-         * doesn't support @ strings
-         * doesn't support VS code
-         * doesn't support => properties
-         * doesn't support few unicode values
+         * supports only c# 5.0
          */
 
         /* Exit codes:
@@ -325,7 +318,7 @@ namespace SharpLoader
 
             // Inject references
             var compileReferences = userReferences.ToList();
-            foreach (var t in randomizer.InjectAssemblies)
+            foreach (var t in randomizer.InjectReferences)
             {
                 if (compileReferences.All(a => a != t))
                 {
@@ -344,11 +337,15 @@ namespace SharpLoader
                 Process.Start(outputName);
             }
 
-            var outputBytes = File.ReadAllBytes(outputName);
-            var hash = MD5.Create().ComputeHash(outputBytes);
+            var sourceBytes = new List<byte>();
+            foreach (var s in compileSourceFiles)
+            {
+                sourceBytes.AddRange(Encoding.Default.GetBytes(s));
+            }
+            var sourceHash = MD5.Create().ComputeHash(sourceBytes.ToArray());
 
             Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine($"-=: MD5 : {ByteArrayToString(hash)}");
+            Console.WriteLine($"-=: MD5 : {ByteArrayToString(sourceHash)}");
 
             Console.ForegroundColor = ConsoleColor.Green;
             Console.Write($"-=: DONE [{outputName}] (press any key to exit)");
