@@ -32,7 +32,7 @@ namespace SharpLoader
          */
 
         private const string Author = "Zaczero";
-        private const string Version = "1.3";
+        private const string Version = "1.4";
 
         private const int ReadBufferSize = 255;
 
