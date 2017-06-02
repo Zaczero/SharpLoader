@@ -3,13 +3,15 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
+using System.Windows.Forms;
 using SharpLoader.Core;
 
 namespace SharpLoader
 {
-    public class Program
+    public static class Program
     {
         /* Limitations:
          * supports only c# 5.0
@@ -24,6 +26,15 @@ namespace SharpLoader
          * 5 - source file not found
          */
 
+        [DllImport("kernel32.dll")]
+        private static extern IntPtr GetConsoleWindow();
+
+        [DllImport("user32.dll")]
+        private static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+
+        private const int SW_HIDE = 0;
+        private const int SW_SHOW = 5;
+
         private const string Author = "Zaczero";
         private const string Version = "1.4";
 
@@ -34,12 +45,18 @@ namespace SharpLoader
         private static readonly string MyDirectory = Path.GetDirectoryName(MyPath);
         private static readonly string ConfigPath = Path.Combine(MyDirectory, ConfigFileName);
 
+        public static int Seed = -1;
+
+        [STAThread]
         public static void Main(string[] args)
         {
             Console.Title = $"SharpLoader";
 
+            // Hide cmd
+            ShowWindow(GetConsoleWindow(), SW_HIDE);
+
+            var cmdMode = false;
             var dragDropPaths = new List<string>();
-            var seed = -1;
 
             for (var i = 0; i < args.Length; i++)
             {
@@ -66,7 +83,7 @@ namespace SharpLoader
                         // Get seed from arguments
                         if (args[i] == "-seed")
                         {
-                            var result = int.TryParse(args[i + 1], out seed);
+                            var result = int.TryParse(args[i + 1], out Seed);
                             if (!result)
                             {
                                 throw new Exception($"invalid seed value: {args[i + 1]}");
@@ -76,18 +93,33 @@ namespace SharpLoader
                     // Single argument
                     else
                     {
-                        
+                        if (args[i] == "-cmd")
+                        {
+                            cmdMode = true;
+                        }
                     }
                 }
             }
 
             // Generate random seed
-            if (seed == -1)
+            if (Seed == -1)
             {
-                seed = new Random(Environment.TickCount).Next(0, int.MaxValue);
+                Seed = new Random(Environment.TickCount).Next(0, int.MaxValue);
             }
 
-            var randomizer = new SourceRandomizer(seed);
+            if (!cmdMode)
+            {
+                Application.EnableVisualStyles();
+                Application.SetCompatibleTextRenderingDefault(false);
+                Application.Run(new MainForm());
+
+                return;
+            }
+
+            // Show cmd
+            ShowWindow(GetConsoleWindow(), SW_SHOW);
+
+            var randomizer = new SourceRandomizer(Seed);
             var compiler = new RuntimeCompiler();
 
             var primaryColorValue = new Random(Environment.TickCount).Next(10, 14 + 1);
@@ -98,7 +130,7 @@ namespace SharpLoader
             Console.ForegroundColor = (ConsoleColor)secondaryColorValue;
             Console.WriteLine($"-=: Created by {Author}");
             Console.ForegroundColor = ConsoleColor.DarkGray;
-            Console.WriteLine($"-=: Seed : {seed}");
+            Console.WriteLine($"-=: Seed : {Seed}");
 
             Console.WriteLine();
 
@@ -371,7 +403,7 @@ namespace SharpLoader
             return returnList;
         }
 
-        private static string ByteArrayToString(byte[] bytes)
+        private static string ByteArrayToString(IEnumerable<byte> bytes)
         {
             var returnSb = new StringBuilder();
 
