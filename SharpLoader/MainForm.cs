@@ -1,17 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Diagnostics;
-using System.Drawing;
-using System.IO;
-using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
-using SharpLoader.Core;
 
 namespace SharpLoader
 {
@@ -67,6 +55,8 @@ namespace SharpLoader
             {
                 ResultText.Text = "FAIL";
             }
+
+            GC.Collect();
         }
 
         private void CloseClick(object sender, EventArgs e)
