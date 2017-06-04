@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(SelectForm));
             this.Theme = new SharpLoader.NSTheme();
             this.CloseButton = new SharpLoader.NSButton();
             this.ContinueButton = new SharpLoader.NSButton();
@@ -56,7 +57,7 @@
             this.Theme.Name = "Theme";
             this.Theme.NoRounding = false;
             this.Theme.Sizable = true;
-            this.Theme.Size = new System.Drawing.Size(500, 100);
+            this.Theme.Size = new System.Drawing.Size(500, 105);
             this.Theme.SmartBounds = true;
             this.Theme.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Theme.TabIndex = 0;
@@ -76,7 +77,7 @@
             // 
             // ContinueButton
             // 
-            this.ContinueButton.Location = new System.Drawing.Point(212, 69);
+            this.ContinueButton.Location = new System.Drawing.Point(212, 71);
             this.ContinueButton.Name = "ContinueButton";
             this.ContinueButton.Size = new System.Drawing.Size(75, 23);
             this.ContinueButton.TabIndex = 2;
@@ -108,7 +109,7 @@
             // NotSelectedText
             // 
             this.NotSelectedText.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-            this.NotSelectedText.Location = new System.Drawing.Point(293, 69);
+            this.NotSelectedText.Location = new System.Drawing.Point(293, 71);
             this.NotSelectedText.Name = "NotSelectedText";
             this.NotSelectedText.Size = new System.Drawing.Size(90, 23);
             this.NotSelectedText.TabIndex = 18;
@@ -121,9 +122,10 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(500, 100);
+            this.ClientSize = new System.Drawing.Size(500, 105);
             this.Controls.Add(this.Theme);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "SelectForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "SelectForm";

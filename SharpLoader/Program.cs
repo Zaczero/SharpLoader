@@ -156,6 +156,7 @@ namespace SharpLoader
                     Console.ReadKey();
                 }
 
+                CleanTemp();
                 Environment.Exit(compileResult);
             }
         }
@@ -448,7 +449,7 @@ namespace SharpLoader
             var zipBytes = File.ReadAllBytes(path);
             var zipHash = MD5.Create().ComputeHash(zipBytes);
 
-            var tempDir = Path.GetTempPath() + ByteArrayToString(zipHash);
+            var tempDir = Path.GetTempPath() + @"SharpLoader\" + ByteArrayToString(zipHash);
 
             if (Directory.Exists(tempDir))
             {
@@ -469,6 +470,15 @@ namespace SharpLoader
                 {
                     DragDropPaths.Add(unzipFile);
                 }
+            }
+        }
+
+        public static void CleanTemp()
+        {
+            var path = Path.GetTempPath() + "SharpLoader";
+            if (Directory.Exists(path))
+            {
+                Directory.Delete(path, true);
             }
         }
 
