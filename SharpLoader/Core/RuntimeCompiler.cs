@@ -33,17 +33,14 @@ namespace SharpLoader.Core
             if (result.Errors.HasErrors)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine($"-=: Compilation error");
+                Program.Out($"-=: Compilation error");
 
                 foreach (CompilerError error in result.Errors)
                 {
-                    Console.WriteLine(error);
+                    Program.Out(error.ToString());
                 }
 
-                Debug.Fail(string.Empty);
-                Console.ReadKey();
-
-                Environment.Exit(4);
+                return false;
             }
 
             return true;

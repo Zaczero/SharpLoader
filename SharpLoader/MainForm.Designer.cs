@@ -30,6 +30,11 @@
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.Theme = new SharpLoader.NSTheme();
+            this.CloseButton = new SharpLoader.NSButton();
+            this.nsLabel4 = new SharpLoader.NSLabel();
+            this.ResultText = new SharpLoader.NSTextBox();
+            this.VersionText = new SharpLoader.NSLabel();
+            this.AuthorText = new SharpLoader.NSLabel();
             this.nsSeperator1 = new SharpLoader.NSSeperator();
             this.OutputText = new SharpLoader.NSTextBox();
             this.nsLabel3 = new SharpLoader.NSLabel();
@@ -39,11 +44,6 @@
             this.SeedText = new SharpLoader.NSTextBox();
             this.CompileBtn = new SharpLoader.NSButton();
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
-            this.AuthorText = new SharpLoader.NSLabel();
-            this.VersionText = new SharpLoader.NSLabel();
-            this.nsLabel4 = new SharpLoader.NSLabel();
-            this.ResultText = new SharpLoader.NSTextBox();
-            this.CloseButton = new SharpLoader.NSButton();
             this.Theme.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.SuspendLayout();
@@ -85,9 +85,64 @@
             this.Theme.Transparent = false;
             this.Theme.KeyDown += new System.Windows.Forms.KeyEventHandler(this.ThemeKeyDown);
             // 
+            // CloseButton
+            // 
+            this.CloseButton.Location = new System.Drawing.Point(477, 2);
+            this.CloseButton.Name = "CloseButton";
+            this.CloseButton.Size = new System.Drawing.Size(21, 23);
+            this.CloseButton.TabIndex = 16;
+            this.CloseButton.Text = "X";
+            this.CloseButton.Click += new System.EventHandler(this.CloseClick);
+            // 
+            // nsLabel4
+            // 
+            this.nsLabel4.Font = new System.Drawing.Font("Segoe UI", 11.25F, System.Drawing.FontStyle.Bold);
+            this.nsLabel4.Location = new System.Drawing.Point(12, 265);
+            this.nsLabel4.Name = "nsLabel4";
+            this.nsLabel4.Size = new System.Drawing.Size(56, 23);
+            this.nsLabel4.TabIndex = 15;
+            this.nsLabel4.Value1 = "Result:";
+            this.nsLabel4.Value2 = "";
+            // 
+            // ResultText
+            // 
+            this.ResultText.Cursor = System.Windows.Forms.Cursors.IBeam;
+            this.ResultText.Location = new System.Drawing.Point(74, 265);
+            this.ResultText.MaxLength = 32767;
+            this.ResultText.Multiline = false;
+            this.ResultText.Name = "ResultText";
+            this.ResultText.ReadOnly = true;
+            this.ResultText.Size = new System.Drawing.Size(108, 23);
+            this.ResultText.TabIndex = 14;
+            this.ResultText.Text = "- NOT COMPILED -";
+            this.ResultText.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            this.ResultText.UseSystemPasswordChar = false;
+            // 
+            // VersionText
+            // 
+            this.VersionText.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
+            this.VersionText.Location = new System.Drawing.Point(312, 60);
+            this.VersionText.Name = "VersionText";
+            this.VersionText.Size = new System.Drawing.Size(172, 14);
+            this.VersionText.TabIndex = 13;
+            this.VersionText.Text = "nsLabel5";
+            this.VersionText.Value1 = "Version: ";
+            this.VersionText.Value2 = "";
+            // 
+            // AuthorText
+            // 
+            this.AuthorText.Font = new System.Drawing.Font("Segoe UI", 11.25F, System.Drawing.FontStyle.Bold);
+            this.AuthorText.Location = new System.Drawing.Point(312, 40);
+            this.AuthorText.Name = "AuthorText";
+            this.AuthorText.Size = new System.Drawing.Size(172, 23);
+            this.AuthorText.TabIndex = 12;
+            this.AuthorText.Text = "nsLabel4";
+            this.AuthorText.Value1 = "SharpLoader by";
+            this.AuthorText.Value2 = "";
+            // 
             // nsSeperator1
             // 
-            this.nsSeperator1.Location = new System.Drawing.Point(12, 98);
+            this.nsSeperator1.Location = new System.Drawing.Point(12, 93);
             this.nsSeperator1.Name = "nsSeperator1";
             this.nsSeperator1.Size = new System.Drawing.Size(476, 10);
             this.nsSeperator1.TabIndex = 10;
@@ -97,12 +152,12 @@
             // 
             this.OutputText.Cursor = System.Windows.Forms.Cursors.IBeam;
             this.OutputText.Font = new System.Drawing.Font("Verdana", 7F);
-            this.OutputText.Location = new System.Drawing.Point(12, 140);
+            this.OutputText.Location = new System.Drawing.Point(12, 128);
             this.OutputText.MaxLength = 32767;
             this.OutputText.Multiline = true;
             this.OutputText.Name = "OutputText";
             this.OutputText.ReadOnly = true;
-            this.OutputText.Size = new System.Drawing.Size(476, 119);
+            this.OutputText.Size = new System.Drawing.Size(476, 131);
             this.OutputText.TabIndex = 9;
             this.OutputText.TextAlign = System.Windows.Forms.HorizontalAlignment.Left;
             this.OutputText.UseSystemPasswordChar = false;
@@ -110,7 +165,7 @@
             // nsLabel3
             // 
             this.nsLabel3.Font = new System.Drawing.Font("Segoe UI", 11.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-            this.nsLabel3.Location = new System.Drawing.Point(213, 114);
+            this.nsLabel3.Location = new System.Drawing.Point(213, 102);
             this.nsLabel3.Name = "nsLabel3";
             this.nsLabel3.Size = new System.Drawing.Size(66, 24);
             this.nsLabel3.TabIndex = 8;
@@ -185,61 +240,6 @@
             this.pictureBox1.Size = new System.Drawing.Size(382, 277);
             this.pictureBox1.TabIndex = 11;
             this.pictureBox1.TabStop = false;
-            // 
-            // AuthorText
-            // 
-            this.AuthorText.Font = new System.Drawing.Font("Segoe UI", 11.25F, System.Drawing.FontStyle.Bold);
-            this.AuthorText.Location = new System.Drawing.Point(312, 40);
-            this.AuthorText.Name = "AuthorText";
-            this.AuthorText.Size = new System.Drawing.Size(172, 23);
-            this.AuthorText.TabIndex = 12;
-            this.AuthorText.Text = "nsLabel4";
-            this.AuthorText.Value1 = "SharpLoader by";
-            this.AuthorText.Value2 = "";
-            // 
-            // VersionText
-            // 
-            this.VersionText.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-            this.VersionText.Location = new System.Drawing.Point(312, 60);
-            this.VersionText.Name = "VersionText";
-            this.VersionText.Size = new System.Drawing.Size(172, 14);
-            this.VersionText.TabIndex = 13;
-            this.VersionText.Text = "nsLabel5";
-            this.VersionText.Value1 = "Version: ";
-            this.VersionText.Value2 = "";
-            // 
-            // nsLabel4
-            // 
-            this.nsLabel4.Font = new System.Drawing.Font("Segoe UI", 11.25F, System.Drawing.FontStyle.Bold);
-            this.nsLabel4.Location = new System.Drawing.Point(12, 265);
-            this.nsLabel4.Name = "nsLabel4";
-            this.nsLabel4.Size = new System.Drawing.Size(56, 23);
-            this.nsLabel4.TabIndex = 15;
-            this.nsLabel4.Value1 = "Result:";
-            this.nsLabel4.Value2 = "";
-            // 
-            // ResultText
-            // 
-            this.ResultText.Cursor = System.Windows.Forms.Cursors.IBeam;
-            this.ResultText.Location = new System.Drawing.Point(74, 265);
-            this.ResultText.MaxLength = 32767;
-            this.ResultText.Multiline = false;
-            this.ResultText.Name = "ResultText";
-            this.ResultText.ReadOnly = true;
-            this.ResultText.Size = new System.Drawing.Size(108, 23);
-            this.ResultText.TabIndex = 14;
-            this.ResultText.Text = "- NOT COMPILED -";
-            this.ResultText.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
-            this.ResultText.UseSystemPasswordChar = false;
-            // 
-            // CloseButton
-            // 
-            this.CloseButton.Location = new System.Drawing.Point(477, 2);
-            this.CloseButton.Name = "CloseButton";
-            this.CloseButton.Size = new System.Drawing.Size(21, 23);
-            this.CloseButton.TabIndex = 16;
-            this.CloseButton.Text = "X";
-            this.CloseButton.Click += new System.EventHandler(this.CloseClick);
             // 
             // MainForm
             // 

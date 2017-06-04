@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
@@ -78,7 +79,25 @@ namespace SharpLoader
                     // File
                     else
                     {
-                        _dragDropPaths.Add(args[i]);
+                        // Zip
+                        if (Path.GetExtension(args[i]) == ".zip")
+                        {
+                            var tempFile = Path.GetTempFileName();
+
+                            var tempDir = 
+                                Path.GetDirectoryName(tempFile) + 
+                                @"\" +
+                                Path.GetFileNameWithoutExtension(tempFile);
+
+                            ZipFile.ExtractToDirectory(args[i], tempDir);
+                            
+                            _dragDropPaths.AddRange(ScanDir(tempDir));
+                        }
+                        // Normal
+                        else
+                        {
+                            _dragDropPaths.Add(args[i]);
+                        }
                     }
                 }
                 // Normal argument
@@ -225,6 +244,7 @@ namespace SharpLoader
 
             // Read sources
             var userSourceFiles = new List<string>();
+
             // Add from config
             foreach (var path in userSourcePaths)
             {
@@ -384,12 +404,13 @@ namespace SharpLoader
                 }
             }
 
-            compiler.Compile(outputName, compilerArguments, compileReferences.ToArray(), compileSourceFiles.ToArray());
-
-            if (autoRun && File.Exists(outputName))
+            if (!compiler.Compile(
+                outputName, 
+                compilerArguments, 
+                compileReferences.ToArray(),
+                compileSourceFiles.ToArray()))
             {
-                Out("-=: Starting...");
-                Process.Start(outputName);
+                return 4;
             }
 
             var sourceBytes = new List<byte>();
@@ -400,15 +421,21 @@ namespace SharpLoader
             var sourceHash = MD5.Create().ComputeHash(sourceBytes.ToArray());
 
             Console.ForegroundColor = ConsoleColor.Yellow;
-            Out($"-=: HASH : {Hash = ByteArrayToString(sourceHash)}");
+            Out($"-=: Hash : {Hash = ByteArrayToString(sourceHash)}");
 
             Console.ForegroundColor = ConsoleColor.Green;
-            Console.Write($"-=: DONE [{outputName}] (press any key to exit)");
+            Out($"-=: Done [{outputName}] {(_outToConsole ? "(press any key to exit)" : string.Empty)}");
+
+            if (autoRun && File.Exists(outputName))
+            {
+                Out("-=: Starting...");
+                Process.Start(outputName);
+            }
 
             return 0;
         }
 
-        private static void Out(string text)
+        public static void Out(string text)
         {
             if (_outToConsole)
             {
@@ -420,7 +447,7 @@ namespace SharpLoader
             }
         }
 
-        public static IEnumerable<string> GetFilesFromDirectory(string directory)
+        private static IEnumerable<string> GetFilesFromDirectory(string directory)
         {
             var dir = new DirectoryInfo(directory);
 
@@ -437,7 +464,7 @@ namespace SharpLoader
             return returnList;
         }
 
-        public static string ByteArrayToString(IEnumerable<byte> bytes)
+        private static string ByteArrayToString(IEnumerable<byte> bytes)
         {
             var returnSb = new StringBuilder();
 
@@ -448,6 +475,18 @@ namespace SharpLoader
             }
 
             return returnSb.ToString();
+        }
+
+        private static IEnumerable<string> ScanDir(string dir)
+        {
+            var files = Directory.GetFiles(dir).ToList();
+
+            foreach (var d in Directory.GetDirectories(dir))
+            {
+                files.AddRange(ScanDir(d));
+            }
+
+            return files;
         }
     }
 }
