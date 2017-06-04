@@ -102,7 +102,7 @@ namespace SharpLoader
         private int Pad;
         protected override void PaintHook()
         {
-            G.Clear(BackColor);
+            G.Clear(Color.FromArgb(50, 50, 50));
             DrawBorders(P2, 1);
 
             G.DrawLine(P1, 0, 26, Width, 26);
@@ -161,7 +161,7 @@ namespace SharpLoader
             G = e.Graphics;
             G.TextRenderingHint = TextRenderingHint.ClearTypeGridFit;
 
-            //G.Clear(BackColor);
+            G.Clear(Color.FromArgb(50, 50, 50));
             G.SmoothingMode = SmoothingMode.AntiAlias;
 
             GP1 = ThemeModule.CreateRound(0, 0, Width - 1, Height - 1, 7);
@@ -307,7 +307,7 @@ namespace SharpLoader
         {
             G = e.Graphics;
 
-            G.Clear(BackColor);
+            G.Clear(Color.FromArgb(50, 50, 50));
             G.SmoothingMode = SmoothingMode.AntiAlias;
 
             GP1 = ThemeModule.CreateRound(0, 0, Width - 1, Height - 1, 7);
@@ -395,7 +395,7 @@ namespace SharpLoader
             G = e.Graphics;
             G.TextRenderingHint = TextRenderingHint.ClearTypeGridFit;
 
-            G.Clear(BackColor);
+            G.Clear(Color.FromArgb(50, 50, 50));
 
             SZ1 = G.MeasureString(Value1, Font, Width, StringFormat.GenericTypographic);
             SZ2 = G.MeasureString(Value2, Font, Width, StringFormat.GenericTypographic);
@@ -413,7 +413,7 @@ namespace SharpLoader
     }
 
     [DefaultEvent("TextChanged")]
-    class NSTextBox : Control
+    public class NSTextBox : Control
     {
 
         private HorizontalAlignment _TextAlign = HorizontalAlignment.Left;
@@ -591,7 +591,7 @@ namespace SharpLoader
         {
             G = e.Graphics;
 
-            G.Clear(BackColor);
+            G.Clear(Color.FromArgb(50, 50, 50));
             G.SmoothingMode = SmoothingMode.AntiAlias;
 
             GP1 = ThemeModule.CreateRound(0, 0, Width - 1, Height - 1, 7);
@@ -706,7 +706,7 @@ namespace SharpLoader
             G = e.Graphics;
             G.TextRenderingHint = TextRenderingHint.ClearTypeGridFit;
 
-            G.Clear(BackColor);
+            G.Clear(Color.FromArgb(50, 50, 50));
             G.SmoothingMode = SmoothingMode.AntiAlias;
 
             GP1 = ThemeModule.CreateRound(0, 2, Height - 5, Height - 5, 5);
@@ -811,7 +811,7 @@ namespace SharpLoader
             G = e.Graphics;
             G.TextRenderingHint = TextRenderingHint.ClearTypeGridFit;
 
-            G.Clear(BackColor);
+            G.Clear(Color.FromArgb(50, 50, 50));
             G.SmoothingMode = SmoothingMode.AntiAlias;
 
             GP1 = new GraphicsPath();
@@ -892,7 +892,7 @@ namespace SharpLoader
             G = e.Graphics;
             G.TextRenderingHint = TextRenderingHint.ClearTypeGridFit;
 
-            G.Clear(BackColor);
+            G.Clear(Color.FromArgb(50, 50, 50));
             G.SmoothingMode = SmoothingMode.AntiAlias;
 
             GP1 = ThemeModule.CreateRound(0, 0, Width - 1, Height - 1, 7);
@@ -1178,7 +1178,7 @@ namespace SharpLoader
             G = e.Graphics;
             G.TextRenderingHint = TextRenderingHint.ClearTypeGridFit;
 
-            G.Clear(BackColor);
+            G.Clear(Color.FromArgb(50, 50, 50));
             G.SmoothingMode = SmoothingMode.AntiAlias;
 
             GP1 = ThemeModule.CreateRound(0, 0, Width - 1, Height - 1, 7);
@@ -1298,7 +1298,7 @@ namespace SharpLoader
         protected override void OnPaint(PaintEventArgs e)
         {
             G = e.Graphics;
-            G.Clear(BackColor);
+            G.Clear(Color.FromArgb(50, 50, 50));
 
             switch (_ControlButton)
             {
@@ -1473,7 +1473,7 @@ namespace SharpLoader
             G = e.Graphics;
             G.TextRenderingHint = TextRenderingHint.ClearTypeGridFit;
 
-            G.Clear(BackColor);
+            G.Clear(Color.FromArgb(50, 50, 50));
             G.SmoothingMode = SmoothingMode.AntiAlias;
 
             GP1 = ThemeModule.CreateRound(0, 0, Width - 1, Height - 1, 7);
@@ -1526,7 +1526,7 @@ namespace SharpLoader
         protected override void OnPaint(PaintEventArgs e)
         {
             G = e.Graphics;
-            G.Clear(BackColor);
+            G.Clear(Color.FromArgb(50, 50, 50));
 
             G.DrawLine(P1, 0, 5, Width, 5);
             G.DrawLine(P2, 0, 6, Width, 6);
@@ -1643,7 +1643,7 @@ namespace SharpLoader
         {
             G = e.Graphics;
 
-            G.Clear(BackColor);
+            G.Clear(Color.FromArgb(50, 50, 50));
             G.SmoothingMode = SmoothingMode.AntiAlias;
 
             GP1 = ThemeModule.CreateRound(0, 5, Width - 1, 10, 5);
@@ -1860,7 +1860,7 @@ namespace SharpLoader
         {
             G = e.Graphics;
 
-            G.Clear(BackColor);
+            G.Clear(Color.FromArgb(50, 50, 50));
             G.SmoothingMode = SmoothingMode.AntiAlias;
 
             GP1 = ThemeModule.CreateRound(0, 0, Width - 1, Height - 1, 7);
@@ -2029,7 +2029,7 @@ namespace SharpLoader
             G = e.Graphics;
             G.TextRenderingHint = TextRenderingHint.ClearTypeGridFit;
 
-            G.Clear(BackColor);
+            G.Clear(Color.FromArgb(50, 50, 50));
 
             Rectangle R = default(Rectangle);
 
@@ -2294,7 +2294,7 @@ namespace SharpLoader
             G = e.Graphics;
             G.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
 
-            G.Clear(BackColor);
+            G.Clear(Color.FromArgb(50, 50, 50));
             G.SmoothingMode = SmoothingMode.AntiAlias;
 
             bool LeftEllipse = false;
@@ -2580,7 +2580,7 @@ namespace SharpLoader
         protected override void OnPaint(System.Windows.Forms.PaintEventArgs e)
         {
             G = e.Graphics;
-            G.Clear(BackColor);
+            G.Clear(Color.FromArgb(50, 50, 50));
 
             GP1 = DrawArrow(4, 6, false);
             GP2 = DrawArrow(5, 7, false);
@@ -2893,7 +2893,7 @@ namespace SharpLoader
         protected override void OnPaint(System.Windows.Forms.PaintEventArgs e)
         {
             G = e.Graphics;
-            G.Clear(BackColor);
+            G.Clear(Color.FromArgb(50, 50, 50));
 
             GP1 = DrawArrow(6, 4, false);
             GP2 = DrawArrow(7, 5, false);
@@ -3438,7 +3438,7 @@ namespace SharpLoader
             G = e.Graphics;
             G.TextRenderingHint = TextRenderingHint.ClearTypeGridFit;
 
-            G.Clear(BackColor);
+            G.Clear(Color.FromArgb(50, 50, 50));
 
             int X = 0;
             int Y = 0;

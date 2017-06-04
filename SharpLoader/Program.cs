@@ -24,6 +24,7 @@ namespace SharpLoader
          * 3 - entry point not found
          * 4 - compilation error
          * 5 - source file not found
+         * 6 - file in use
          */
 
         [DllImport("kernel32.dll")]
@@ -35,8 +36,8 @@ namespace SharpLoader
         private const int SW_HIDE = 0;
         private const int SW_SHOW = 5;
 
-        private const string Author = "Zaczero";
-        private const string Version = "1.4";
+        public const string Author = "Zaczero";
+        public const string Version = "2.0";
 
         private const int ReadBufferSize = 255;
 
@@ -46,6 +47,11 @@ namespace SharpLoader
         private static readonly string ConfigPath = Path.Combine(MyDirectory, ConfigFileName);
 
         public static int Seed = -1;
+        public static string Hash;
+
+        private static MainForm _form;
+        private static List<string> _dragDropPaths;
+        private static bool _outToConsole;
 
         [STAThread]
         public static void Main(string[] args)
@@ -55,8 +61,9 @@ namespace SharpLoader
             // Hide cmd
             ShowWindow(GetConsoleWindow(), SW_HIDE);
 
+            _dragDropPaths = new List<string>();
+
             var cmdMode = false;
-            var dragDropPaths = new List<string>();
 
             for (var i = 0; i < args.Length; i++)
             {
@@ -66,12 +73,12 @@ namespace SharpLoader
                     // Directory
                     if (File.GetAttributes(args[i]).HasFlag(FileAttributes.Directory))
                     {
-                        dragDropPaths.AddRange(GetFilesFromDirectory(args[i]));
+                        _dragDropPaths.AddRange(GetFilesFromDirectory(args[i]));
                     }
                     // File
                     else
                     {
-                        dragDropPaths.Add(args[i]);
+                        _dragDropPaths.Add(args[i]);
                     }
                 }
                 // Normal argument
@@ -111,14 +118,25 @@ namespace SharpLoader
             {
                 Application.EnableVisualStyles();
                 Application.SetCompatibleTextRenderingDefault(false);
-                Application.Run(new MainForm());
+                Application.Run(_form = new MainForm());
 
                 return;
             }
 
             // Show cmd
             ShowWindow(GetConsoleWindow(), SW_SHOW);
+            _outToConsole = true;
 
+            var compileResult = Compile();
+            if (compileResult != 0)
+            {
+                Console.ReadKey();
+            }
+            Environment.Exit(compileResult);
+        }
+
+        public static int Compile()
+        {
             var randomizer = new SourceRandomizer(Seed);
             var compiler = new RuntimeCompiler();
 
@@ -126,19 +144,19 @@ namespace SharpLoader
             var secondaryColorValue = primaryColorValue - 8;
 
             Console.ForegroundColor = (ConsoleColor)primaryColorValue;
-            Console.WriteLine($"-=: SharpLoader v{Version}");
+            Out($"-=: SharpLoader v{Version}");
             Console.ForegroundColor = (ConsoleColor)secondaryColorValue;
-            Console.WriteLine($"-=: Created by {Author}");
+            Out($"-=: Created by {Author}");
             Console.ForegroundColor = ConsoleColor.DarkGray;
-            Console.WriteLine($"-=: Seed : {Seed}");
+            Out($"-=: Seed : {Seed}");
 
-            Console.WriteLine();
+            Out("");
 
             // Data file not found
             if (!File.Exists(ConfigFileName))
             {
                 Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine($"-=: Config file not found ({ConfigFileName})");
+                Out($"-=: Config file not found ({ConfigFileName})");
 
                 WinApi.WritePrivateProfileString("SharpLoader", "References", "", ConfigPath);
                 WinApi.WritePrivateProfileString("SharpLoader", "Directory", "", ConfigPath);
@@ -148,15 +166,13 @@ namespace SharpLoader
                 WinApi.WritePrivateProfileString("SharpLoader", "AutoRun", "false", ConfigPath);
 
                 Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine($"-=: Default config file generated");
+                Out($"-=: Default config file generated");
 
-                Console.ReadKey();
-
-                Environment.Exit(1);
+                return 1;
             }
 
             Console.ForegroundColor = ConsoleColor.White;
-            Console.WriteLine("-=: Reading...");
+            Out("-=: Reading...");
 
             var userReferencesReadSb = new StringBuilder(ReadBufferSize);
             var baseDirectoryReadSb = new StringBuilder(ReadBufferSize);
@@ -180,9 +196,9 @@ namespace SharpLoader
             var autoRun = autoRunReadSb.ToString().Equals("true", StringComparison.OrdinalIgnoreCase);
 
             // Drag n Drop
-            if (dragDropPaths.Count != 0)
+            if (_dragDropPaths.Count != 0)
             {
-                userSourcePaths = dragDropPaths.ToArray();
+                userSourcePaths = _dragDropPaths.ToArray();
             }
             // Read from config
             else
@@ -194,21 +210,17 @@ namespace SharpLoader
             if (userReferences.Length == 0)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine($"-=: References are not given");
+                Out($"-=: References are not given");
 
-                Console.ReadKey();
-
-                Environment.Exit(2);
+                return 2;
             }
 
             if (string.IsNullOrWhiteSpace(outputName))
             {
                 Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine($"-=: Output name is not given");
+                Out($"-=: Output name is not given");
 
-                Console.ReadKey();
-
-                Environment.Exit(2);
+                return 2;
             }
 
             // Read sources
@@ -219,11 +231,9 @@ namespace SharpLoader
                 if (!File.Exists(path))
                 {
                     Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine($"-=: Source file not found ({path})");
+                    Out($"-=: Source file not found ({path})");
 
-                    Console.ReadKey();
-
-                    Environment.Exit(5);
+                    return 5;
                 }
 
                 if (path.EndsWith(".cs"))
@@ -240,15 +250,13 @@ namespace SharpLoader
             if (userSourceFiles.Count == 0)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine($"-=: Source files not found");
+                Out($"-=: Source files not found");
 
-                Console.ReadKey();
-
-                Environment.Exit(2);
+                return 2;
             }
 
             Console.ForegroundColor = ConsoleColor.White;
-            Console.WriteLine("-=: Randomizing...");
+            Out("-=: Randomizing...");
 
             // Randomize
             for (var i = 0; i < userSourceFiles.Count; i++)
@@ -269,7 +277,7 @@ namespace SharpLoader
             compileSourceFiles.AddRange(randomizer.InjectSources);
 
             // Inject bytes
-            if(randomizer.InjectBytes.Count > 0)
+            if (randomizer.InjectBytes.Count > 0)
             {
                 var output = new StringBuilder("new byte[] {");
                 foreach (var b in randomizer.InjectBytes)
@@ -280,12 +288,12 @@ namespace SharpLoader
                 output.Append("}");
 
                 compileSourceFiles.Add($"namespace {randomizer.InjectBytesNamespace}" +
-                               $"{{" +
-                               $"public static class {randomizer.InjectBytesClass}" +
-                               $"{{" +
-                               $"public static byte[] {randomizer.InjectBytesProperty} = {output};" +
-                               $"}}" +
-                               $"}}");
+                                       $"{{" +
+                                       $"public static class {randomizer.InjectBytesClass}" +
+                                       $"{{" +
+                                       $"public static byte[] {randomizer.InjectBytesProperty} = {output};" +
+                                       $"}}" +
+                                       $"}}");
             }
 
             // Inject bools
@@ -300,12 +308,12 @@ namespace SharpLoader
                 output.Append("}");
 
                 compileSourceFiles.Add($"namespace {randomizer.InjectBoolsNamespace}" +
-                               $"{{" +
-                               $"public static class {randomizer.InjectBoolsClass}" +
-                               $"{{" +
-                               $"public static bool[] {randomizer.InjectBoolsProperty} = {output};" +
-                               $"}}" +
-                               $"}}");
+                                       $"{{" +
+                                       $"public static class {randomizer.InjectBoolsClass}" +
+                                       $"{{" +
+                                       $"public static bool[] {randomizer.InjectBoolsProperty} = {output};" +
+                                       $"}}" +
+                                       $"}}");
             }
 
             // Inject ints
@@ -320,12 +328,12 @@ namespace SharpLoader
                 output.Append("}");
 
                 compileSourceFiles.Add($"namespace {randomizer.InjectIntsNamespace}" +
-                               $"{{" +
-                               $"public static class {randomizer.InjectIntsClass}" +
-                               $"{{" +
-                               $"public static int[] {randomizer.InjectIntsProperty} = {output};" +
-                               $"}}" +
-                               $"}}");
+                                       $"{{" +
+                                       $"public static class {randomizer.InjectIntsClass}" +
+                                       $"{{" +
+                                       $"public static int[] {randomizer.InjectIntsProperty} = {output};" +
+                                       $"}}" +
+                                       $"}}");
             }
 
             // Inject strings
@@ -340,12 +348,12 @@ namespace SharpLoader
                 output.Append("}");
 
                 compileSourceFiles.Add($"namespace {randomizer.InjectStringsNamespace}" +
-                               $"{{" +
-                               $"public static class {randomizer.InjectStringsClass}" +
-                               $"{{" +
-                               $"public static string[] {randomizer.InjectStringsProperty} = {output};" +
-                               $"}}" +
-                               $"}}");
+                                       $"{{" +
+                                       $"public static class {randomizer.InjectStringsClass}" +
+                                       $"{{" +
+                                       $"public static string[] {randomizer.InjectStringsProperty} = {output};" +
+                                       $"}}" +
+                                       $"}}");
             }
 
             // Inject references
@@ -359,13 +367,28 @@ namespace SharpLoader
             }
 
             Console.ForegroundColor = ConsoleColor.White;
-            Console.WriteLine("-=: Compiling...");
+            Out("-=: Compiling...");
+
+            if (File.Exists(outputName))
+            {
+                try
+                {
+                    File.Delete(outputName);
+                }
+                catch (UnauthorizedAccessException)
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Out($"-=: File in use");
+
+                    return 6;
+                }
+            }
 
             compiler.Compile(outputName, compilerArguments, compileReferences.ToArray(), compileSourceFiles.ToArray());
 
             if (autoRun && File.Exists(outputName))
             {
-                Console.WriteLine("-=: Starting...");
+                Out("-=: Starting...");
                 Process.Start(outputName);
             }
 
@@ -377,16 +400,27 @@ namespace SharpLoader
             var sourceHash = MD5.Create().ComputeHash(sourceBytes.ToArray());
 
             Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine($"-=: MD5 : {ByteArrayToString(sourceHash)}");
+            Out($"-=: HASH : {Hash = ByteArrayToString(sourceHash)}");
 
             Console.ForegroundColor = ConsoleColor.Green;
             Console.Write($"-=: DONE [{outputName}] (press any key to exit)");
-            Console.ReadKey();
 
-            Environment.Exit(0);
+            return 0;
         }
 
-        private static IEnumerable<string> GetFilesFromDirectory(string directory)
+        private static void Out(string text)
+        {
+            if (_outToConsole)
+            {
+                Console.WriteLine(text);
+            }
+            else
+            {
+                _form.OutputText.Text += $"{text}{Environment.NewLine}";
+            }
+        }
+
+        public static IEnumerable<string> GetFilesFromDirectory(string directory)
         {
             var dir = new DirectoryInfo(directory);
 
@@ -403,7 +437,7 @@ namespace SharpLoader
             return returnList;
         }
 
-        private static string ByteArrayToString(IEnumerable<byte> bytes)
+        public static string ByteArrayToString(IEnumerable<byte> bytes)
         {
             var returnSb = new StringBuilder();
 
