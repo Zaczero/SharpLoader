@@ -82,15 +82,18 @@ namespace SharpLoader
                         // Zip
                         if (Path.GetExtension(args[i]) == ".zip")
                         {
-                            var tempFile = Path.GetTempFileName();
+                            var zipBytes = File.ReadAllBytes(args[i]);
+                            var zipHash = MD5.Create().ComputeHash(zipBytes);
 
-                            var tempDir = 
-                                Path.GetDirectoryName(tempFile) + 
-                                @"\" +
-                                Path.GetFileNameWithoutExtension(tempFile);
+                            var tempDir = Path.GetTempPath() + ByteArrayToString(zipHash);
+
+                            if (Directory.Exists(tempDir))
+                            {
+                                Directory.Delete(tempDir, true);
+                            }
 
                             ZipFile.ExtractToDirectory(args[i], tempDir);
-                            
+
                             _dragDropPaths.AddRange(ScanDir(tempDir));
                         }
                         // Normal
@@ -413,6 +416,9 @@ namespace SharpLoader
                 return 4;
             }
 
+            Console.ForegroundColor = ConsoleColor.Green;
+            Out($"-=: Done [{outputName}] {(_outToConsole ? "(press any key to exit)" : string.Empty)}");
+
             var sourceBytes = new List<byte>();
             foreach (var s in compileSourceFiles)
             {
@@ -421,10 +427,7 @@ namespace SharpLoader
             var sourceHash = MD5.Create().ComputeHash(sourceBytes.ToArray());
 
             Console.ForegroundColor = ConsoleColor.Yellow;
-            Out($"-=: Hash : {Hash = ByteArrayToString(sourceHash)}");
-
-            Console.ForegroundColor = ConsoleColor.Green;
-            Out($"-=: Done [{outputName}] {(_outToConsole ? "(press any key to exit)" : string.Empty)}");
+            Out($"-=: Hash [{Hash = ByteArrayToString(sourceHash)}]");
 
             if (autoRun && File.Exists(outputName))
             {
