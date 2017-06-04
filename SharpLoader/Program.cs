@@ -45,10 +45,11 @@ namespace SharpLoader
         private const string ConfigFileName = "SharpLoader.ini";
         private static readonly string MyPath = Process.GetCurrentProcess().MainModule.FileName;
         private static readonly string MyDirectory = Path.GetDirectoryName(MyPath);
-        private static readonly string ConfigPath = Path.Combine(MyDirectory, ConfigFileName);
-
+        
         public static int Seed = -1;
         public static string Hash;
+
+        private static string _configPath = Path.Combine(MyDirectory, ConfigFileName);
 
         private static MainForm _form;
         private static List<string> _dragDropPaths;
@@ -94,7 +95,19 @@ namespace SharpLoader
 
                             ZipFile.ExtractToDirectory(args[i], tempDir);
 
-                            _dragDropPaths.AddRange(ScanDir(tempDir));
+                            var unzipFiles = ScanDir(tempDir);
+
+                            foreach (var unzipFile in unzipFiles)
+                            {
+                                if (unzipFile.EndsWith(ConfigFileName))
+                                {
+                                    _configPath = unzipFile;
+                                }
+                                else
+                                {
+                                    _dragDropPaths.Add(unzipFile);
+                                }
+                            }
                         }
                         // Normal
                         else
@@ -128,6 +141,19 @@ namespace SharpLoader
                         }
                     }
                 }
+            }
+
+            // Data file not found
+            if (!File.Exists(_configPath))
+            {
+                WinApi.WritePrivateProfileString("SharpLoader", "References", "", _configPath);
+                WinApi.WritePrivateProfileString("SharpLoader", "Directory", "", _configPath);
+                WinApi.WritePrivateProfileString("SharpLoader", "Sources", "", _configPath);
+                WinApi.WritePrivateProfileString("SharpLoader", "Output", "SharpLoader", _configPath);
+                WinApi.WritePrivateProfileString("SharpLoader", "Arguments", "/platform:anycpu32bitpreferred", _configPath);
+                WinApi.WritePrivateProfileString("SharpLoader", "AutoRun", "false", _configPath);
+
+                Environment.Exit(1);
             }
 
             // Generate random seed
@@ -175,20 +201,10 @@ namespace SharpLoader
             Out("");
 
             // Data file not found
-            if (!File.Exists(ConfigFileName))
+            if (!File.Exists(_configPath))
             {
                 Console.ForegroundColor = ConsoleColor.Red;
                 Out($"-=: Config file not found ({ConfigFileName})");
-
-                WinApi.WritePrivateProfileString("SharpLoader", "References", "", ConfigPath);
-                WinApi.WritePrivateProfileString("SharpLoader", "Directory", "", ConfigPath);
-                WinApi.WritePrivateProfileString("SharpLoader", "Sources", "", ConfigPath);
-                WinApi.WritePrivateProfileString("SharpLoader", "Output", "SharpLoader", ConfigPath);
-                WinApi.WritePrivateProfileString("SharpLoader", "Arguments", "/platform:anycpu32bitpreferred", ConfigPath);
-                WinApi.WritePrivateProfileString("SharpLoader", "AutoRun", "false", ConfigPath);
-
-                Console.ForegroundColor = ConsoleColor.Red;
-                Out($"-=: Default config file generated");
 
                 return 1;
             }
@@ -203,12 +219,12 @@ namespace SharpLoader
             var compilerArgumentsReadSb = new StringBuilder(ReadBufferSize);
             var autoRunReadSb = new StringBuilder(ReadBufferSize);
 
-            WinApi.GetPrivateProfileString("SharpLoader", "References", string.Empty, userReferencesReadSb, ReadBufferSize, ConfigPath);
-            WinApi.GetPrivateProfileString("SharpLoader", "Directory", string.Empty, baseDirectoryReadSb, ReadBufferSize, ConfigPath);
-            WinApi.GetPrivateProfileString("SharpLoader", "Sources", string.Empty, sourceFilesReadSb, ReadBufferSize, ConfigPath);
-            WinApi.GetPrivateProfileString("SharpLoader", "Output", string.Empty, outputNameReadSb, ReadBufferSize, ConfigPath);
-            WinApi.GetPrivateProfileString("SharpLoader", "Arguments", string.Empty, compilerArgumentsReadSb, ReadBufferSize, ConfigPath);
-            WinApi.GetPrivateProfileString("SharpLoader", "AutoRun", string.Empty, autoRunReadSb, ReadBufferSize, ConfigPath);
+            WinApi.GetPrivateProfileString("SharpLoader", "References", string.Empty, userReferencesReadSb, ReadBufferSize, _configPath);
+            WinApi.GetPrivateProfileString("SharpLoader", "Directory", string.Empty, baseDirectoryReadSb, ReadBufferSize, _configPath);
+            WinApi.GetPrivateProfileString("SharpLoader", "Sources", string.Empty, sourceFilesReadSb, ReadBufferSize, _configPath);
+            WinApi.GetPrivateProfileString("SharpLoader", "Output", string.Empty, outputNameReadSb, ReadBufferSize, _configPath);
+            WinApi.GetPrivateProfileString("SharpLoader", "Arguments", string.Empty, compilerArgumentsReadSb, ReadBufferSize, _configPath);
+            WinApi.GetPrivateProfileString("SharpLoader", "AutoRun", string.Empty, autoRunReadSb, ReadBufferSize, _configPath);
 
             var userReferences = userReferencesReadSb.ToString().Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
             var baseDirectory = baseDirectoryReadSb.ToString();
