@@ -45,14 +45,13 @@ namespace SharpLoader
         private const string ConfigFileName = "SharpLoader.ini";
         private static readonly string MyPath = Process.GetCurrentProcess().MainModule.FileName;
         private static readonly string MyDirectory = Path.GetDirectoryName(MyPath);
-        
+        public static string ConfigPath = Path.Combine(MyDirectory, ConfigFileName);
+
+        public static List<string> DragDropPaths;
         public static int Seed = -1;
         public static string Hash;
 
-        private static string _configPath = Path.Combine(MyDirectory, ConfigFileName);
-
         private static MainForm _form;
-        private static List<string> _dragDropPaths;
         private static bool _outToConsole;
 
         [STAThread]
@@ -63,7 +62,7 @@ namespace SharpLoader
             // Hide cmd
             ShowWindow(GetConsoleWindow(), SW_HIDE);
 
-            _dragDropPaths = new List<string>();
+            DragDropPaths = new List<string>();
 
             var cmdMode = false;
 
@@ -75,7 +74,7 @@ namespace SharpLoader
                     // Directory
                     if (File.GetAttributes(args[i]).HasFlag(FileAttributes.Directory))
                     {
-                        _dragDropPaths.AddRange(GetFilesFromDirectory(args[i]));
+                        DragDropPaths.AddRange(GetFilesFromDirectory(args[i]));
                     }
                     // File
                     else
@@ -83,36 +82,12 @@ namespace SharpLoader
                         // Zip
                         if (Path.GetExtension(args[i]) == ".zip")
                         {
-                            var zipBytes = File.ReadAllBytes(args[i]);
-                            var zipHash = MD5.Create().ComputeHash(zipBytes);
-
-                            var tempDir = Path.GetTempPath() + ByteArrayToString(zipHash);
-
-                            if (Directory.Exists(tempDir))
-                            {
-                                Directory.Delete(tempDir, true);
-                            }
-
-                            ZipFile.ExtractToDirectory(args[i], tempDir);
-
-                            var unzipFiles = ScanDir(tempDir);
-
-                            foreach (var unzipFile in unzipFiles)
-                            {
-                                if (unzipFile.EndsWith(ConfigFileName))
-                                {
-                                    _configPath = unzipFile;
-                                }
-                                else
-                                {
-                                    _dragDropPaths.Add(unzipFile);
-                                }
-                            }
+                           ProcessZip(args[i]);
                         }
                         // Normal
                         else
                         {
-                            _dragDropPaths.Add(args[i]);
+                            DragDropPaths.Add(args[i]);
                         }
                     }
                 }
@@ -143,44 +118,46 @@ namespace SharpLoader
                 }
             }
 
-            // Data file not found
-            if (!File.Exists(_configPath))
-            {
-                WinApi.WritePrivateProfileString("SharpLoader", "References", "", _configPath);
-                WinApi.WritePrivateProfileString("SharpLoader", "Directory", "", _configPath);
-                WinApi.WritePrivateProfileString("SharpLoader", "Sources", "", _configPath);
-                WinApi.WritePrivateProfileString("SharpLoader", "Output", "SharpLoader", _configPath);
-                WinApi.WritePrivateProfileString("SharpLoader", "Arguments", "/platform:anycpu32bitpreferred", _configPath);
-                WinApi.WritePrivateProfileString("SharpLoader", "AutoRun", "false", _configPath);
-
-                Environment.Exit(1);
-            }
-
             // Generate random seed
             if (Seed == -1)
             {
                 Seed = new Random(Environment.TickCount).Next(0, int.MaxValue);
             }
 
+            // Show UI
             if (!cmdMode)
             {
                 Application.EnableVisualStyles();
                 Application.SetCompatibleTextRenderingDefault(false);
                 Application.Run(_form = new MainForm());
-
-                return;
             }
-
             // Show cmd
-            ShowWindow(GetConsoleWindow(), SW_SHOW);
-            _outToConsole = true;
-
-            var compileResult = Compile();
-            if (compileResult != 0)
+            else
             {
-                Console.ReadKey();
+                // Data file not found
+                if (!File.Exists(ConfigPath))
+                {
+                    WinApi.WritePrivateProfileString("SharpLoader", "References", "", ConfigPath);
+                    WinApi.WritePrivateProfileString("SharpLoader", "Directory", "", ConfigPath);
+                    WinApi.WritePrivateProfileString("SharpLoader", "Sources", "", ConfigPath);
+                    WinApi.WritePrivateProfileString("SharpLoader", "Output", "SharpLoader", ConfigPath);
+                    WinApi.WritePrivateProfileString("SharpLoader", "Arguments", "/platform:anycpu32bitpreferred", ConfigPath);
+                    WinApi.WritePrivateProfileString("SharpLoader", "AutoRun", "false", ConfigPath);
+
+                    Environment.Exit(1);
+                }
+
+                ShowWindow(GetConsoleWindow(), SW_SHOW);
+                _outToConsole = true;
+
+                var compileResult = Compile();
+                if (compileResult != 0)
+                {
+                    Console.ReadKey();
+                }
+
+                Environment.Exit(compileResult);
             }
-            Environment.Exit(compileResult);
         }
 
         public static int Compile()
@@ -201,7 +178,7 @@ namespace SharpLoader
             Out("");
 
             // Data file not found
-            if (!File.Exists(_configPath))
+            if (!File.Exists(ConfigPath))
             {
                 Console.ForegroundColor = ConsoleColor.Red;
                 Out($"-=: Config file not found ({ConfigFileName})");
@@ -219,12 +196,12 @@ namespace SharpLoader
             var compilerArgumentsReadSb = new StringBuilder(ReadBufferSize);
             var autoRunReadSb = new StringBuilder(ReadBufferSize);
 
-            WinApi.GetPrivateProfileString("SharpLoader", "References", string.Empty, userReferencesReadSb, ReadBufferSize, _configPath);
-            WinApi.GetPrivateProfileString("SharpLoader", "Directory", string.Empty, baseDirectoryReadSb, ReadBufferSize, _configPath);
-            WinApi.GetPrivateProfileString("SharpLoader", "Sources", string.Empty, sourceFilesReadSb, ReadBufferSize, _configPath);
-            WinApi.GetPrivateProfileString("SharpLoader", "Output", string.Empty, outputNameReadSb, ReadBufferSize, _configPath);
-            WinApi.GetPrivateProfileString("SharpLoader", "Arguments", string.Empty, compilerArgumentsReadSb, ReadBufferSize, _configPath);
-            WinApi.GetPrivateProfileString("SharpLoader", "AutoRun", string.Empty, autoRunReadSb, ReadBufferSize, _configPath);
+            WinApi.GetPrivateProfileString("SharpLoader", "References", string.Empty, userReferencesReadSb, ReadBufferSize, ConfigPath);
+            WinApi.GetPrivateProfileString("SharpLoader", "Directory", string.Empty, baseDirectoryReadSb, ReadBufferSize, ConfigPath);
+            WinApi.GetPrivateProfileString("SharpLoader", "Sources", string.Empty, sourceFilesReadSb, ReadBufferSize, ConfigPath);
+            WinApi.GetPrivateProfileString("SharpLoader", "Output", string.Empty, outputNameReadSb, ReadBufferSize, ConfigPath);
+            WinApi.GetPrivateProfileString("SharpLoader", "Arguments", string.Empty, compilerArgumentsReadSb, ReadBufferSize, ConfigPath);
+            WinApi.GetPrivateProfileString("SharpLoader", "AutoRun", string.Empty, autoRunReadSb, ReadBufferSize, ConfigPath);
 
             var userReferences = userReferencesReadSb.ToString().Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
             var baseDirectory = baseDirectoryReadSb.ToString();
@@ -234,9 +211,9 @@ namespace SharpLoader
             var autoRun = autoRunReadSb.ToString().Equals("true", StringComparison.OrdinalIgnoreCase);
 
             // Drag n Drop
-            if (_dragDropPaths.Count != 0)
+            if (DragDropPaths.Count != 0)
             {
-                userSourcePaths = _dragDropPaths.ToArray();
+                userSourcePaths = DragDropPaths.ToArray();
             }
             // Read from config
             else
@@ -463,6 +440,35 @@ namespace SharpLoader
             else
             {
                 _form.OutputText.Text += $"{text}{Environment.NewLine}";
+            }
+        }
+
+        public static void ProcessZip(string path)
+        {
+            var zipBytes = File.ReadAllBytes(path);
+            var zipHash = MD5.Create().ComputeHash(zipBytes);
+
+            var tempDir = Path.GetTempPath() + ByteArrayToString(zipHash);
+
+            if (Directory.Exists(tempDir))
+            {
+                Directory.Delete(tempDir, true);
+            }
+
+            ZipFile.ExtractToDirectory(path, tempDir);
+
+            var unzipFiles = ScanDir(tempDir);
+
+            foreach (var unzipFile in unzipFiles)
+            {
+                if (unzipFile.EndsWith(ConfigFileName))
+                {
+                    ConfigPath = unzipFile;
+                }
+                else
+                {
+                    DragDropPaths.Add(unzipFile);
+                }
             }
         }
 

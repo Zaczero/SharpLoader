@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Windows.Forms;
 
 namespace SharpLoader
@@ -9,6 +10,12 @@ namespace SharpLoader
 
         public MainForm()
         {
+            if (Program.DragDropPaths.Count == 0 &&
+                !File.Exists(Program.ConfigPath))
+            {
+                new SelectForm().ShowDialog();
+            }
+
             InitializeComponent();
 
             AuthorText.Value2 = Program.Author;
