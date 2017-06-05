@@ -457,7 +457,7 @@ namespace SharpLoader.Core
                 // No arguments
                 else
                 {
-                    trashAmount = _rnd.Next(1, 6 + 1);
+                    trashAmount = _rnd.Next(1, 10 + 1);
                 }
 
                 // Indexes:
