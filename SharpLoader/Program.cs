@@ -438,15 +438,15 @@ namespace SharpLoader
             return 0;
         }
 
-        public static void Out(string text)
+        public static void Out(object obj)
         {
             if (_outToConsole)
             {
-                Console.WriteLine(text);
+                Console.WriteLine(obj);
             }
             else
             {
-                _form.OutputText.Text += $"{text}{Environment.NewLine}";
+                _form.OutputText.Text += $"{obj}{Environment.NewLine}";
             }
         }
 
