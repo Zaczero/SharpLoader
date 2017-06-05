@@ -203,7 +203,7 @@ string a = <proxy "Hello World">;
 ```
 
 ## How to configure SharpLoader?
-All SharpLoader's configuration is stored in SharpLoader.ini file.
+All SharpLoader's configuration is stored in SharpLoader.ini file.  
 You can generate this file by running SharpLoader in cmd mode.
 
 #### References
