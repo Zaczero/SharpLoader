@@ -680,9 +680,9 @@ namespace SharpLoader.Core
                                           $"for(int {i} = {Inject(0)}; {i} < {data}.Length; {i}++)" +
                                           $"{{" +
                                           $"<flow>" +
-                                          $"<trash 4>" +
+                                          $"<trash 6>" +
                                           $"{data}[{i}] = (byte)({fin}[{i}] ^ {enc}[{i} % {Inject(4)}]);" +
-                                          $"<trash 4>" +
+                                          $"<trash 6>" +
                                           $"<flow/>" +
                                           $"}}" +
                                           $"<flow>" +
@@ -766,9 +766,9 @@ namespace SharpLoader.Core
                                           $"for(int {i} = {Inject(0)}; {i} < {data}.Length; {i}++)" +
                                           $"{{" +
                                           $"<flow>" +
-                                          $"<trash 4>" +
+                                          $"<trash 6>" +
                                           $"{data}[{i}] = (byte)({fin}[{i}] ^ {enc}[{i} % {Inject(4)}]);" +
-                                          $"<trash 4>" +
+                                          $"<trash 6>" +
                                           $"<flow/>" +
                                           $"}}" +
                                           $"<flow>" +
@@ -851,9 +851,9 @@ namespace SharpLoader.Core
                                           $"for(int {i} = {Inject(0)}; {i} < {data}.Length; {i}++)" +
                                           $"{{" +
                                           $"<flow>" +
-                                          $"<trash 4>" +
+                                          $"<trash 6>" +
                                           $"{data}[{i}] = (byte)({fin}[{i}] ^ {enc}[{i} % {Inject(4)}]);" +
-                                          $"<trash 4>" +
+                                          $"<trash 6>" +
                                           $"<flow/>" +
                                           $"}}" +
                                           $"<flow>" +
