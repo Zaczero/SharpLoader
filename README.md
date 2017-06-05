@@ -7,20 +7,24 @@ This process reults a random file signature every time.
 ![](http://image.prntscr.com/image/bf7ca945444f4426b56229b8cdea4e9c.jpeg)
 
 ### How to compile a SharpLoader project?
-If everything is set up properly (by developer) all that user has to do is run SharpLoader.exe and wait few seconds.
+If everything is set up properly all you have to do is run SharpLoader.exe, select project .zip and click compile.
 
 ### What is seed?
 Seed is a unique randomization output.  
 Value is random by default but it's possible to set it manually.
 
 ### How to set custom seed value?
-SharpLoader accepts custom seed value as an argument.  
+Use -seed argument.
 `SharpLoader.exe -seed 123`
+
+### How to run SharpLoader in cmd?
+Use -cmd argument.
+`SharpLoader.exe -cmd`
 
 # Developer guide
 
 ## How to prepare source code files?
-Currently there are available 5 randomization features (that are listed below).  
+Currently there are available 8 randomization features (that are listed below).  
 Simply add proper tags to your source code.  
 ```c#
 //-<swap>
@@ -207,13 +211,8 @@ Separated by ';' character.
 `References=System.dll;System.Windows.Forms.dll`
 
 #### Directory
-Base directory where SharpLoader scans for source files.  
+Main project directory. 
 `Directory=MySources`
-
-#### Sources
-Paths to all external (out of base directory) source files that your application use.  
-Separated by ';' character.  
-`Sources=C:\AdditionalSources\Utilities.cs`
 
 *TIP: Alternatively you can drag'n'drop source files/directories*
 

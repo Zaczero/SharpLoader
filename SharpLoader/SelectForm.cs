@@ -26,7 +26,7 @@ namespace SharpLoader
             if (e.KeyCode == Keys.Enter ||
                 e.KeyCode == Keys.Space)
             {
-                ContinueClick(null, null);
+                SelectClick(null, null);
             }
         }
 
