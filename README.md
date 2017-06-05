@@ -204,6 +204,7 @@ string a = <proxy "Hello World">;
 
 ## How to configure SharpLoader?
 All SharpLoader's configuration is stored in SharpLoader.ini file.
+You can generate this file by running SharpLoader in cmd mode.
 
 #### References
 All references that your application use (dlls).  
@@ -211,7 +212,7 @@ Separated by ';' character.
 `References=System.dll;System.Windows.Forms.dll`
 
 #### Directory
-Main project directory. 
+Main project directory.  
 `Directory=MySources`
 
 *TIP: Alternatively you can drag'n'drop source files/directories*
