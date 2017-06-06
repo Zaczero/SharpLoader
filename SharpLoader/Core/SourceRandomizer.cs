@@ -530,7 +530,40 @@ namespace SharpLoader.Core
                     {
                         // value trash
                         var varName = GetRandomName();
-                        var operation = _rnd.Next(0, 2) == 0 ? '+' : '-';
+                        char operation;
+
+                        switch (_rnd.Next(0, 5))
+                        {
+                            case 0:
+                            {
+                                operation = '+';
+                                    break;
+                            }
+                            case 1:
+                            {
+                                operation = '-';
+                                    break;
+                            }
+                            case 2:
+                            {
+                                operation = '*';
+                                    break;
+                            }
+                            case 3:
+                            {
+                                operation = '/';
+                                    break;
+                            }
+                            case 4:
+                            {
+                                operation = '^';
+                                    break;
+                            }
+                            default:
+                            {
+                                throw new Exception("invalid switch value");
+                            }
+                        }
 
                         string varType;
                         int varValue;
@@ -542,7 +575,7 @@ namespace SharpLoader.Core
                             {
                                 varType = "byte";
                                 varChange = _rnd.Next(1, byte.MaxValue);
-                                varValue = operation == '+'
+                                varValue = operation != '-'
                                     ? _rnd.Next(byte.MinValue, byte.MaxValue - varChange)
                                     : _rnd.Next(byte.MinValue + varChange, byte.MaxValue);
                                 break;
@@ -551,7 +584,7 @@ namespace SharpLoader.Core
                             {
                                 varType = "short";
                                 varChange = _rnd.Next(1, short.MaxValue);
-                                varValue = operation == '+'
+                                varValue = operation != '-'
                                     ? _rnd.Next(short.MinValue, short.MaxValue - varChange)
                                     : _rnd.Next(short.MinValue + varChange, short.MaxValue);
                                 break;
@@ -560,7 +593,7 @@ namespace SharpLoader.Core
                             {
                                 varType = "int";
                                 varChange = _rnd.Next(1, int.MaxValue);
-                                varValue = operation == '+'
+                                varValue = operation != '-'
                                     ? _rnd.Next(int.MinValue, int.MaxValue - varChange)
                                     : _rnd.Next(int.MinValue + varChange, int.MaxValue);
                                 break;
@@ -578,8 +611,8 @@ namespace SharpLoader.Core
                     {
                         // object trash
                         var operation = _rnd.Next(0, 2) == 0 ? "GetHashCode()" : "GetTypeCode()";
-
-                        switch (_rnd.Next(0, 6))
+                        
+                        switch (_rnd.Next(0, 10))
                         {
                             case 0:
                             {
@@ -609,6 +642,26 @@ namespace SharpLoader.Core
                             case 5:
                             {
                                 trash += $"new long().{operation};";
+                                break;
+                            }
+                            case 6:
+                            {
+                                trash += $"new sbyte().{operation};";
+                                break;
+                            }
+                            case 7:
+                            {
+                                trash += $"new ushort().{operation};";
+                                break;
+                            }
+                            case 8:
+                            {
+                                trash += $"new uint().{operation};";
+                                break;
+                            }
+                            case 9:
+                            {
+                                trash += $"new ulong().{operation};";
                                 break;
                             }
                             default:
