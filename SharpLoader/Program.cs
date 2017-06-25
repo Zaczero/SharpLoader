@@ -38,9 +38,9 @@ namespace SharpLoader
         private const int SW_SHOW = 5;
 
         public const string Author = "Zaczero";
-        public const string Version = "2.0";
+        public const string Version = "2.0.1";
 
-        private const int ReadBufferSize = 255;
+        private const int ReadBufferSize = ushort.MaxValue;
 
         private const string ConfigFileName = "SharpLoader.ini";
         private static readonly string MyPath = Process.GetCurrentProcess().MainModule.FileName;
