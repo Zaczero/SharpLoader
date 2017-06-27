@@ -2,7 +2,7 @@
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.Diagnostics;
-using Microsoft.CodeDom.Providers.DotNetCompilerPlatform;
+using Microsoft.CSharp;
 
 namespace SharpLoader.Core
 {
@@ -12,7 +12,7 @@ namespace SharpLoader.Core
 
         public RuntimeCompiler()
         {
-            _compiler = new CSharpCodeProvider();
+            _compiler = new CSharpCodeProvider(new Dictionary<string, string> { { "CompilerVersion", "v4.0" } });
         }
 
         public bool Compile(string outputName, string compilerArguments, string[] assemblies, params string[] sources)

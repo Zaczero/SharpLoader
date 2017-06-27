@@ -32,7 +32,6 @@ namespace SharpLoader
 
         private void CloseClick(object sender, EventArgs e)
         {
-            Program.CleanTemp();
             Application.Exit();
         }
 
