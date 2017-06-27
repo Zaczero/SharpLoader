@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
@@ -14,10 +15,6 @@ namespace SharpLoader
 {
     public static class Program
     {
-        /* Limitations:
-         * supports only c# 5.0
-         */
-
         /* Exit codes:
          * 0 - default
          * 1 - data file not found
@@ -38,18 +35,19 @@ namespace SharpLoader
         private const int SW_SHOW = 5;
 
         public const string Author = "Zaczero";
-        public const string Version = "2.0.1";
+        public const string Version = "2.1";
 
         private const int ReadBufferSize = ushort.MaxValue;
 
         private const string ConfigFileName = "SharpLoader.ini";
         private static readonly string MyPath = Process.GetCurrentProcess().MainModule.FileName;
         private static readonly string MyDirectory = Path.GetDirectoryName(MyPath);
-        public static string ConfigPath = Path.Combine(MyDirectory, ConfigFileName);
+        public static string ConfigPath;
 
         public static List<string> DragDropPaths;
         public static int Seed = -1;
         public static string Hash;
+        public static string SaveDir;
 
         private static MainForm _form;
         private static bool _outToConsole;
@@ -69,7 +67,7 @@ namespace SharpLoader
             for (var i = 0; i < args.Length; i++)
             {
                 // Argument is path
-                if (args[i] != MyPath && (File.Exists(args[i]) || Directory.Exists(args[i])))
+                if ((File.Exists(args[i]) || Directory.Exists(args[i])) && Path.GetExtension(args[i]) != ".exe")
                 {
                     // Directory
                     if (File.GetAttributes(args[i]).HasFlag(FileAttributes.Directory))
@@ -94,6 +92,12 @@ namespace SharpLoader
                 // Normal argument
                 else
                 {
+                    if (args[i] == "-cmd")
+                    {
+                        cmdMode = true;
+                        continue;
+                    }
+
                     // Multiple arguments
                     if (i + 1 < args.Length)
                     {
@@ -105,14 +109,12 @@ namespace SharpLoader
                             {
                                 throw new Exception($"invalid seed value: {args[i + 1]}");
                             }
+                            i++;
                         }
-                    }
-                    // Single argument
-                    else
-                    {
-                        if (args[i] == "-cmd")
+                        else if (args[i] == "-path")
                         {
-                            cmdMode = true;
+                            SaveDir = args[i + 1];
+                            i++;
                         }
                     }
                 }
@@ -123,6 +125,18 @@ namespace SharpLoader
             {
                 Seed = new Random(Environment.TickCount).Next(0, int.MaxValue);
             }
+
+            if (string.IsNullOrEmpty(SaveDir))
+            {
+                ConfigPath = Path.Combine(MyDirectory, ConfigFileName);
+                SaveDir = MyDirectory;
+            }
+            else
+            {
+                ConfigPath = Path.Combine(SaveDir, ConfigFileName);
+            }
+
+            DumpToAppData();
 
             // Show UI
             if (!cmdMode)
@@ -158,6 +172,55 @@ namespace SharpLoader
 
                 CleanTemp();
                 Environment.Exit(compileResult);
+            }
+        }
+
+        public static void DumpToAppData()
+        {
+            var appDataPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "SharpLoader");
+            var exePath = Path.Combine(appDataPath, "SharpLoader.exe");
+            var thisPath = Process.GetCurrentProcess().MainModule.FileName;
+
+            if (thisPath != exePath)
+            {
+                if (!Directory.Exists(appDataPath))
+                {
+                    Directory.CreateDirectory(appDataPath);
+                }
+
+                // Run the newest file
+                File.Copy(thisPath, exePath, true);
+                
+                var argsString = string.Empty;
+                foreach (var arg in Environment.GetCommandLineArgs())
+                {
+                    if (File.Exists(arg))
+                    {
+                        argsString += $"\"{arg}\" ";
+                    }
+                    else
+                    {
+                        argsString += $"{arg} ";
+                    }
+                }
+                argsString = argsString.TrimEnd(' ');
+
+                Process.Start(exePath, $"{argsString} -path \"{SaveDir}\"");
+                Environment.Exit(0);
+            }
+
+            var binPath = Path.Combine(appDataPath, "bin");
+            var binZipPath = Path.Combine(appDataPath, "bin.zip");
+
+            if (!Directory.Exists(binPath))
+            {
+                if (!File.Exists(binZipPath))
+                {
+                    WriteResourceToFile("SharpLoader.bin.zip", binZipPath);
+                }
+
+                ZipFile.ExtractToDirectory(binZipPath, binPath);
+                File.Delete(binZipPath);
             }
         }
 
@@ -238,6 +301,8 @@ namespace SharpLoader
 
                 return 2;
             }
+
+            outputName = Path.Combine(SaveDir, outputName);
 
             // Read sources
             var userSourceFiles = new List<string>();
@@ -410,8 +475,10 @@ namespace SharpLoader
                 return 4;
             }
 
+            int.TryParse("lol", out int parseeed);
+
             Console.ForegroundColor = ConsoleColor.Green;
-            Out($"-=: Done [{outputName}] {(_outToConsole ? "(press any key to exit)" : string.Empty)}");
+            Out($"-=: Done [{Path.GetFileName(outputName)}] {(_outToConsole ? "(press any key to exit)" : string.Empty)}");
 
             var sourceBytes = new List<byte>();
             foreach (var s in compileSourceFiles)
@@ -479,6 +546,17 @@ namespace SharpLoader
             if (Directory.Exists(path))
             {
                 Directory.Delete(path, true);
+            }
+        }
+
+        private static void WriteResourceToFile(string resourceName, string fileName)
+        {
+            using (var resource = Assembly.GetExecutingAssembly().GetManifestResourceStream(resourceName))
+            {
+                using (var file = new FileStream(fileName, FileMode.Create, FileAccess.Write))
+                {
+                    resource.CopyTo(file);
+                }
             }
         }
 
