@@ -474,9 +474,7 @@ namespace SharpLoader
             {
                 return 4;
             }
-
-            int.TryParse("lol", out int parseeed);
-
+            
             Console.ForegroundColor = ConsoleColor.Green;
             Out($"-=: Done [{Path.GetFileName(outputName)}] {(_outToConsole ? "(press any key to exit)" : string.Empty)}");
 
