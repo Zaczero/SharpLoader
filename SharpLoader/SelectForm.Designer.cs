@@ -30,11 +30,11 @@
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(SelectForm));
             this.Theme = new SharpLoader.NSTheme();
+            this.NotSelectedText = new SharpLoader.NSLabel();
             this.CloseButton = new SharpLoader.NSButton();
             this.ContinueButton = new SharpLoader.NSButton();
             this.SelectButton = new SharpLoader.NSButton();
             this.PathText = new SharpLoader.NSTextBox();
-            this.NotSelectedText = new SharpLoader.NSLabel();
             this.Theme.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -56,7 +56,7 @@
             this.Theme.Movable = true;
             this.Theme.Name = "Theme";
             this.Theme.NoRounding = false;
-            this.Theme.Sizable = true;
+            this.Theme.Sizable = false;
             this.Theme.Size = new System.Drawing.Size(500, 105);
             this.Theme.SmartBounds = true;
             this.Theme.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
@@ -65,6 +65,18 @@
             this.Theme.TransparencyKey = System.Drawing.Color.Empty;
             this.Theme.Transparent = false;
             this.Theme.KeyDown += new System.Windows.Forms.KeyEventHandler(this.ThemeKeyDown);
+            // 
+            // NotSelectedText
+            // 
+            this.NotSelectedText.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
+            this.NotSelectedText.Location = new System.Drawing.Point(293, 71);
+            this.NotSelectedText.Name = "NotSelectedText";
+            this.NotSelectedText.Size = new System.Drawing.Size(90, 23);
+            this.NotSelectedText.TabIndex = 18;
+            this.NotSelectedText.Text = "nsLabel1";
+            this.NotSelectedText.Value1 = "File not selected.";
+            this.NotSelectedText.Value2 = "";
+            this.NotSelectedText.Visible = false;
             // 
             // CloseButton
             // 
@@ -105,18 +117,6 @@
             this.PathText.TabIndex = 0;
             this.PathText.TextAlign = System.Windows.Forms.HorizontalAlignment.Left;
             this.PathText.UseSystemPasswordChar = false;
-            // 
-            // NotSelectedText
-            // 
-            this.NotSelectedText.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-            this.NotSelectedText.Location = new System.Drawing.Point(293, 71);
-            this.NotSelectedText.Name = "NotSelectedText";
-            this.NotSelectedText.Size = new System.Drawing.Size(90, 23);
-            this.NotSelectedText.TabIndex = 18;
-            this.NotSelectedText.Text = "nsLabel1";
-            this.NotSelectedText.Value1 = "File not selected.";
-            this.NotSelectedText.Value2 = "";
-            this.NotSelectedText.Visible = false;
             // 
             // SelectForm
             // 

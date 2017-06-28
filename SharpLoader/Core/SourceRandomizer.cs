@@ -193,8 +193,8 @@ namespace SharpLoader.Core
                 if (insideString == 0)
                 {
                     // Encode
-                    if (str[i] == '\r' ||
-                        str[i] == '\n' ||
+                    if (//str[i] == '\r' ||
+                        //str[i] == '\n' ||
                         str[i] == '\t')
                     {
                         continue;
@@ -234,7 +234,7 @@ namespace SharpLoader.Core
 
             str = resultSb.ToString();
         }
-
+        
         private void Replace(ref string str)
         {
             str = str.Replace("<seed>", _seed.ToString());
@@ -1396,7 +1396,8 @@ namespace SharpLoader.Core
             else
             {
                 // Split
-                var lines = str.Split(new[] {';'}, StringSplitOptions.RemoveEmptyEntries);
+                var lines = str.Split(';').Where(rawLine => !string.IsNullOrWhiteSpace(rawLine)).ToArray();
+
                 for (var i = 0; i < lines.Length; i++)
                 {
                     lines[i] += ';';

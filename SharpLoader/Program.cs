@@ -35,7 +35,7 @@ namespace SharpLoader
         private const int SW_SHOW = 5;
 
         public const string Author = "Zaczero";
-        public const string Version = "2.1";
+        public const string Version = "2.2";
 
         private const int ReadBufferSize = ushort.MaxValue;
 
@@ -189,7 +189,21 @@ namespace SharpLoader
                 }
 
                 // Run the newest file
-                File.Copy(thisPath, exePath, true);
+                retry:
+                try
+                {
+                    File.Copy(thisPath, exePath, true);
+                }
+                catch (Exception)
+                {
+                    if (MessageBox.Show("SharpLoader is already running.", "SharpLoader", MessageBoxButtons.RetryCancel,
+                            MessageBoxIcon.Information) == DialogResult.Retry)
+                    {
+                        goto retry;
+                    }
+                    
+                    Environment.Exit(0);
+                }
                 
                 var argsString = string.Empty;
                 foreach (var arg in Environment.GetCommandLineArgs())
